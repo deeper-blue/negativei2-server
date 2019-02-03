@@ -1,5 +1,5 @@
 import json
-from flask import Flask, request, abort
+from flask import Flask, request, abort, jsonify
 from schemas.game import MakeMoveInput
 
 BAD_REQUEST = 400
@@ -17,6 +17,26 @@ def make_move():
     if errors:
         abort(BAD_REQUEST, str(errors))
     return REQUEST_OK
+
+@app.route('/getgame/<game_id>')
+def get_game(game_id):
+    # example of return type. Possible that there is established standard
+    # we will find out when incorporating an actual chess library
+    return jsonify({"board": "kjdiIjfjekKojfjLKJfkj",
+            "players": {
+                "white": {
+                    "id": "playerID1",
+                    "time-remaining": "3496",
+                    "moves": ["E3->D4", "D4->D5"]
+                },
+                "black": {
+                    "id": "playerID2",
+                    "time-remaining": "3496",
+                    "moves": ["B3->C4", "C4->B5"]
+                }
+            }
+           })
+
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0')
