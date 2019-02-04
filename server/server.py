@@ -1,6 +1,7 @@
 import json
 from flask import Flask, request, abort, jsonify
 from schemas.game import MakeMoveInput, CreateGameInput
+from schemas.controller import ControllerRegisterInput
 
 BAD_REQUEST = 400
 REQUEST_OK = 'OK'
@@ -44,6 +45,16 @@ def create_game():
         abort(BAD_REQUEST, str(errors))
     return get_game(0)
 
+@app.route('/controllerregister', methods=["POST"])
+def register_controller():
+    errors = ControllerRegisterInput().validate(request.form)
+    if errors:
+        abort(BAD_REQUEST, str(errors))
+    return '0'
+
+@app.route('/controllerpoll/<board_id>')
+def controller_poll(board_id):
+    return get_game(board_id)
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0')
