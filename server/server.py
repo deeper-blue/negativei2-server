@@ -1,6 +1,6 @@
 import json
 from flask import Flask, request, abort, jsonify
-from schemas.game import MakeMoveInput
+from schemas.game import MakeMoveInput, CreateGameInput
 
 BAD_REQUEST = 400
 REQUEST_OK = 'OK'
@@ -36,6 +36,13 @@ def get_game(game_id):
                 }
             }
            })
+
+@app.route('/creategame', methods=["POST"])
+def create_game():
+    errors = CreateGameInput().validate(request.form)
+    if errors:
+        abort(BAD_REQUEST, str(errors))
+    return get_game(0)
 
 
 if __name__ == "__main__":

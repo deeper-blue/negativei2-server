@@ -13,3 +13,20 @@ class MakeMoveInput(Schema):
         # TODO: Check move decodes properly
         # TODO: Check move is applicable to the board
         pass
+
+class CreateGameInput(Schema):
+    # ID of the user that creates the game
+    creator_id = fields.String(required=True)
+    # ID of the first player, or AI or open slot
+    player1_id = fields.String(required=True)
+    # ID of the second player, or AI or open slot
+    player2_id = fields.String(required=True)
+    # Time each player is given
+    time_per_player = fields.Integer(required=True)
+    # ID of the robot/board to play on. Reserved for future use
+    board_id = fields.String(required=True)
+
+    @validates('time_per_player')
+    def validate_time(self, value):
+        if value < 0:
+            raise ValidationError('Cannot have negative time')
