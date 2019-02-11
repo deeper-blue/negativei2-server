@@ -5,8 +5,7 @@ WHITE = 'w'
 BLACK = 'b'
 
 class Game:
-    """Class representing and encapsulating the logic required for
-        handling a chess game with time controls.
+    """Class representing and encapsulating the logic required for handling a chess game with time controls.
 
     Usage:
         game = Game(id=1, time_controls=360)
@@ -31,7 +30,10 @@ class Game:
             raise TypeError(f"Expected 'id' argument to be an int, got: {type(id)}.")
 
         if isinstance(time_controls, int):
-            self._time_controls = time_controls
+            if time_controls < 0:
+                raise ValueError(f"Cannot create a game with negative time: {time_controls}.")
+            else:
+                self._time_controls = time_controls
         else:
             raise TypeError(f"Expected 'time_controls' argument to be an int, got: {type(time_controls)}.")
 
@@ -132,6 +134,10 @@ class Game:
         if self._remaining_time[BLACK] == 0:
             result = '1-0'
 
+        # Override result to draw if both sides have no time
+        if (self._remaining_time[WHITE] == 0) and (self._remaining_time[BLACK] == 0):
+            result = '1/2-1/2'
+
         return result
 
     @property
@@ -183,6 +189,10 @@ class Game:
         Returns:
             Move object representing the move that was made.
         """
+
+        # Prevent a move from being made if the game is over
+        if not self.in_progress:
+            raise RuntimeError(f"Cannot make move '{san}' for side '{self.turn}' in ended game.")
 
         # Check if the side has a player assigned to it
         if self.players[self.turn] is None:
@@ -262,3 +272,19 @@ class Game:
             'moves':          self.moves,
             'fen':            self.fen
         }
+
+game = Game(id=1, time_controls=0)
+
+game.add_player(id='player-1-id', side='w')
+game.add_player(id='player-2-id', side='b')
+
+print(game.as_dict())
+
+game.move('e4')
+game.move('e5')
+game.move('d4')
+game.move('exd4')
+game.move('Nf3')
+game.move('Nc6')
+
+print(game.as_dict())
