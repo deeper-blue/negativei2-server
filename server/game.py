@@ -5,6 +5,23 @@ WHITE = 'w'
 BLACK = 'b'
 
 class Game:
+    """
+    Usage:
+        game = Game(id=1, time_controls=360)
+
+        game.add_player(id='player-1-id', side='w')
+        game.add_player(id='player-2-id', side='b')
+
+        game.move('e4')
+        game.move('e5')
+        game.move('d4')
+        game.move('exd4')
+        game.move('Nf3')
+        game.move('Nc6')
+
+        print(game.as_dict())
+    """
+
     def __init__(self, time_controls, id=None, fen=chess.STARTING_FEN):
         if isinstance(id, int):
             self._id = id
