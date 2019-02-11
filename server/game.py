@@ -272,19 +272,3 @@ class Game:
             'moves':          self.moves,
             'fen':            self.fen
         }
-
-game = Game(id=1, time_controls=0)
-
-game.add_player(id='player-1-id', side='w')
-game.add_player(id='player-2-id', side='b')
-
-print(game.as_dict())
-
-game.move('e4')
-game.move('e5')
-game.move('d4')
-game.move('exd4')
-game.move('Nf3')
-game.move('Nc6')
-
-print(game.as_dict())
