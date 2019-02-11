@@ -5,7 +5,9 @@ WHITE = 'w'
 BLACK = 'b'
 
 class Game:
-    """
+    """Class representing and encapsulating the logic required for
+        handling a chess game with time controls.
+
     Usage:
         game = Game(id=1, time_controls=360)
 
