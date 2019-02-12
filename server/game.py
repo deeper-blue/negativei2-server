@@ -25,7 +25,7 @@ class Game:
         methods provided in the class. Each of these instance methods has their own docstring description.
     """
 
-    def __init__(self, time_controls, id=None, fen=chess.STARTING_FEN):
+    def __init__(self, id, time_controls=None, fen=chess.STARTING_FEN):
         if isinstance(id, int):
             self._id = id
         else:
@@ -36,8 +36,10 @@ class Game:
                 raise ValueError(f"Cannot create a game with negative time: {time_controls}.")
             else:
                 self._time_controls = time_controls
+        elif time_controls is None:
+            self._time_controls = time_controls
         else:
-            raise TypeError(f"Expected 'time_controls' argument to be an int, got: {type(time_controls)}.")
+            raise TypeError(f"Expected 'time_controls' argument to be an int (or None), got: {type(time_controls)}.")
 
         self._remaining_time = {WHITE: time_controls, BLACK: time_controls}
         self._board = chess.Board(fen)
@@ -237,6 +239,10 @@ class Game:
 
         # If no side argument given, then assume it's the current side to play
         side = side if side is not None else self.turn
+
+        # Don't apply delta if there are no time controls
+        if self._time_controls is None:
+            return
 
         if side not in (WHITE, BLACK):
             raise ValueError(f"Invalid side '{side}': expected one of ('w', 'b').")
