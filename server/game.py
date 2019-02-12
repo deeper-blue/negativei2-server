@@ -7,20 +7,22 @@ BLACK = 'b'
 class Game:
     """Class representing and encapsulating the logic required for handling a chess game with time controls.
 
-    Usage:
-        game = Game(id=1, time_controls=360)
+    Internal attributes (Do not modify or access directly):
+        _id:             The assigned ID of the Game object (not the Python-assigned one).
+        _time_controls:  The time controls for the game (starting time for each side).
+        _remaining_time: The remaining time for both sides.
+        _board:          The internal board object for the game.
+        _players:        The sides of the game and their corresponding players.
+        _plies:          The ply count (version number).
 
-        game.add_player(id='player-1-id', side='w')
-        game.add_player(id='player-2-id', side='b')
+    Properties:
+        The internal attributes listed above can be accessed through properties defined in this class.
+        There are additional properties defined for other information that is relevant to the Game object
+        and each of these properties has their own docstring description.
 
-        game.move('e4')
-        game.move('e5')
-        game.move('d4')
-        game.move('exd4')
-        game.move('Nf3')
-        game.move('Nc6')
-
-        print(game.as_dict())
+    Functions:
+        Any modifications to attributes (which are intended to be modified) can be done through instance
+        methods provided in the class. Each of these instance methods has their own docstring description.
     """
 
     def __init__(self, time_controls, id=None, fen=chess.STARTING_FEN):
