@@ -1,7 +1,5 @@
 import chess
 import chess.pgn
-from random import randint
-import json
 
 WHITE = 'w'
 BLACK = 'b'
