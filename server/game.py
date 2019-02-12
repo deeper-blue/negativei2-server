@@ -9,7 +9,7 @@ class Game:
 
     Internal attributes (Do not modify or access directly):
         _id:             The assigned ID of the Game object (not the Python-assigned one).
-        _time_controls:  The time controls for the game (starting time for each side).
+        _time_controls:  The time controls for the game (starting time for each side) in seconds.
         _remaining_time: The remaining time for both sides.
         _board:          The internal board object for the game.
         _players:        The sides of the game and their corresponding players.
