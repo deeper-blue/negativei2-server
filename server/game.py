@@ -1,5 +1,7 @@
 import chess
 import chess.pgn
+from random import randint
+import json
 
 WHITE = 'w'
 BLACK = 'b'
@@ -225,15 +227,18 @@ class Game:
         else:
             raise RuntimeError(f"Player slot for side '{side}' is already occupied.")
 
-    def time_delta(self, side, delta) -> None:
+    def time_delta(self, delta, side=None) -> None:
         """Apply a time (in seconds) increment or decrement to a side's time counter.
 
         Arguments:
-            side: The side to apply the time delta to ('w' or 'b').
             delta: The number of seconds to increment or decrement a side's time counter by.
                 - Time decrements should be a negative integer.
                 - Time increments should be a positive integer.
+            side: The side to apply the time delta to ('w' or 'b').
         """
+
+        # If no side argument given, then assume it's the current side to play
+        side = side if side is not None else self.turn
 
         if side not in (WHITE, BLACK):
             raise ValueError(f"Invalid side '{side}': expected one of ('w', 'b').")
