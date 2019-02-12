@@ -266,16 +266,16 @@ class Game:
 
         return {
             'id':             self.id,
-            'time_controls':  self.time_controls,
+            'players':        self.players,
             'free_slots':     self.free_slots,
+            'time_controls':  self.time_controls,
             'remaining_time': self.remaining_time,
             'in_progress':    self.in_progress,
             'result':         self.result,
             'game_over':      self.game_over,
-            'players':        self.players,
+            'turn':           self.turn,
             'ply_count':      self.ply_count,
             'move_count':     self.move_count,
-            'turn':           self.turn,
             'moves':          self.moves,
             'fen':            self.fen
         }
