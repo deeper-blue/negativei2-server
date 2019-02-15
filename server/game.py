@@ -234,20 +234,22 @@ class Game:
             delta: The number of seconds to increment or decrement a side's time counter by.
                 - Time decrements should be a negative integer.
                 - Time increments should be a positive integer.
-            side: The side to apply the time delta to ('w' or 'b').
+            side: The side to apply the time delta to. Expects:
+                - 'w' or 'b'
+                - None (will automatically select whichever side's turn it currently is)
         """
 
         # If no side argument given, then assume it's the current side to play
         side = side if side is not None else self.turn
 
-        # Don't apply delta if there are no time controls
-        if self._time_controls is None:
-            return
-
         if side not in (WHITE, BLACK):
             raise ValueError(f"Invalid side '{side}': expected one of ('w', 'b').")
         if not isinstance(delta, int):
             raise TypeError(f"Expected 'delta' argument to be an int, got: {type(delta)}.")
+
+        # Don't apply delta if there are no time controls
+        if self._time_controls is None:
+            return
 
         # Don't apply delta if side has no seconds left
         if self._remaining_time[side] == 0:
