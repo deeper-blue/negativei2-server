@@ -171,7 +171,7 @@ class Game:
             if self._board.is_stalemate():
                 reason = 'Stalemate'
             if self._board.is_fivefold_repetition():
-                reason = 'Five-fole repetition'
+                reason = 'Five-fold repetition'
 
         # Time as a game-over reason should take more priority over the other reasons
         if self._remaining_time[WHITE] == 0:
