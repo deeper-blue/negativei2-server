@@ -98,7 +98,7 @@ class Game:
         return chess.Board().variation_san(self._board.move_stack)
 
     @property
-    def moves(self) -> str:
+    def moves(self) -> list:
         """Game move history (list of extended move descriptions)."""
         return self._moves
 
