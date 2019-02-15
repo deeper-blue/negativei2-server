@@ -162,12 +162,8 @@ class Game:
                 reason = 'Five-fold repetition'
 
         # Time as a game-over reason should take more priority over the other reasons
-        if self._remaining_time[WHITE] == 0:
-            # White is out of time
-            game_over = True
-            reason = 'Time'
-        if self._remaining_time[BLACK] == 0:
-            # Black is out of time
+        if (self._remaining_time[WHITE] == 0) or (self._remaining_time[BLACK] == 0):
+            # Out of time
             game_over = True
             reason = 'Time'
 
