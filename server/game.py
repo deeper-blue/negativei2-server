@@ -212,20 +212,20 @@ class Game:
 
         return move
 
-    def add_player(self, id, side) -> None:
+    def add_player(self, id_, side) -> None:
         """Adds a player to the current game.
 
         Arguments:
-            id: The player's ID.
+            id_: The player's ID.
             side: The side the player should be assigned to. ('w' or 'b')
         """
 
         if side not in (WHITE, BLACK):
             raise ValueError(f"Invalid side '{side}': expected one of ('w', 'b').")
-        if not isinstance(id, str):
-            raise TypeError(f"Expected 'id' argument to be a string, got: {type(id)}.")
+        if not isinstance(id_, str):
+            raise TypeError(f"Expected 'id_' argument to be a string, got: {type(id_)}.")
         if self._players[side] is None:
-            self._players[side] = id
+            self._players[side] = id_
         else:
             raise RuntimeError(f"Player slot for side '{side}' is already occupied.")
 
