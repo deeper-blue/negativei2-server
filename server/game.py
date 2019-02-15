@@ -192,6 +192,8 @@ class Game:
             san: The requested move (in Standard Algebraic Notation).
         Returns:
             Move object representing the move that was made.
+        Raises:
+            ValueError: When the given move is invalid SAN (in the current game context).
         """
 
         # Prevent a move from being made if the game is over
