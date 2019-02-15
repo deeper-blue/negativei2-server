@@ -170,7 +170,7 @@ class Game:
         return {'game_over': game_over, 'reason': reason}
 
     def _construct_move_description(self, move) -> dict:
-        """Constructs an extended move description for a single move, detailing all necessary information for the controller.
+        """Constructs an extended move description for a single move, detailing all necessary information about the move.
 
         NOTE: This function must be called directly after the move to be described has actually been made.
             This is because it relies on move stack manipulation to work; the function temporarily pops the move
