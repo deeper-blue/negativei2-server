@@ -314,6 +314,40 @@ class Game:
         # Apply the time delta
         self._remaining_time[side] += delta
 
+    def __str__(self) -> str:
+        """String representation of the current board state.
+
+        Builds ontop of chess.Board.__str__() to use unicode characters and add file/rank labels.
+
+        NOTE: The piece colours will appear inverted if a light text colour is used, for example on a dark-background terminal.
+        """
+
+        output = self._board.__str__()
+
+        # Replace white ASCII piece characters with unicode characters
+        output = output.replace('R', '♖')
+        output = output.replace('N', '♘')
+        output = output.replace('B', '♗')
+        output = output.replace('Q', '♕')
+        output = output.replace('K', '♔')
+        output = output.replace('P', '♙')
+
+        # Replace black ASCII piece characters with unicode characters
+        output = output.replace('r', '♜')
+        output = output.replace('n', '♞')
+        output = output.replace('b', '♝')
+        output = output.replace('q', '♛')
+        output = output.replace('k', '♚')
+        output = output.replace('p', '♟')
+
+        # Add file rank labels
+        ranks = [f"{8-i} {rank}" for i, rank in enumerate(output.split('\n'))]
+
+        # Add rank labels
+        ranks.append('  a b c d e f g h')
+
+        return "\n".join(ranks)
+
     def as_dict(self) -> dict:
         """Generates a dictionary representation of the Game object, valid for flask.jsonify.
 
