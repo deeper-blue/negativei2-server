@@ -26,7 +26,7 @@ class Game:
         methods provided in the class. Each of these instance methods has their own docstring description.
     """
 
-    def __init__(self, id_, time_controls=None, fen=chess.STARTING_FEN):
+    def __init__(self, id_, time_controls=None):
         if isinstance(id_, int):
             self._id = id_
         else:
@@ -43,7 +43,7 @@ class Game:
             raise TypeError(f"Expected 'time_controls' argument to be an int (or None), got: {type(time_controls)}.")
 
         self._remaining_time = {WHITE: time_controls, BLACK: time_controls}
-        self._board = chess.Board(fen)
+        self._board = chess.Board()
         self._players = {WHITE: None, BLACK: None}
         self._plies = 0
         self._moves = []
