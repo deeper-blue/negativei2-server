@@ -227,7 +227,7 @@ class Game:
 
         return description
 
-    def _invert(self, color):
+    def _invert(self, color) -> str:
     """Inverts 'w' or 'b'."""
     if color not in (WHITE, BLACK):
         raise ValueError(f"Invalid color '{color}': expected one of ('w', 'b').")
