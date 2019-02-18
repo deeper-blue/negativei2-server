@@ -228,11 +228,11 @@ class Game:
         return description
 
     def _invert(self, color) -> str:
-    """Inverts 'w' or 'b'."""
-    if color not in (WHITE, BLACK):
-        raise ValueError(f"Invalid color '{color}': expected one of ('w', 'b').")
-    else:
-        return BLACK if color == WHITE else WHITE
+        """Inverts 'w' or 'b'."""
+        if color not in (WHITE, BLACK):
+            raise ValueError(f"Invalid color '{color}': expected one of ('w', 'b').")
+        else:
+            return BLACK if color == WHITE else WHITE
 
     def move(self, san) -> dict:
         """Makes a requested move on the internal board.
