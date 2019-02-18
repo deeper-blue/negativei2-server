@@ -191,6 +191,9 @@ class Game:
 
         # Construct the extended move description
         description = {
+            'side': self.turn,
+            'ply_count': self.ply_count,
+            'move_count': self.move_count,
             'piece': self._board.piece_at(move.from_square).symbol().lower(),
             'from': chess.square_name(move.from_square),
             'to': chess.square_name(move.to_square),
@@ -247,6 +250,9 @@ class Game:
         # NOTE: At this point, self._board.push_san() raises a ValueError if the SAN is invalid in the current context.
         move = self._board.push_san(san)
 
+        # Increment ply count after move is successfully made
+        self._plies += 1
+
         # Construct the extended move description
         detailed_move = self._construct_move_description(move)
 
@@ -255,9 +261,6 @@ class Game:
 
         # Add the detailed move to self._moves
         self._moves.append(detailed_move)
-
-        # Increment ply count after move is successfully made
-        self._plies += 1
 
         return detailed_move
 
