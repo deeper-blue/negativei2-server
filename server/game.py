@@ -314,6 +314,10 @@ class Game:
         if self._time_controls is None:
             return
 
+        # Don't apply delta if the game is over
+        if not self.in_progress:
+            return
+
         # Don't apply delta if side has no seconds left
         if self._remaining_time[side] == 0:
             return
