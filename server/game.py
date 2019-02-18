@@ -317,6 +317,12 @@ class Game:
         # Apply the time delta
         self._remaining_time[side] += delta
 
+    def _invert(self, color):
+        if color not in (WHITE, BLACK):
+            raise ValueError(f"Invalid color '{color}': expected one of ('w', 'b').")
+        else:
+            return BLACK if color == WHITE else WHITE
+
     def __str__(self) -> str:
         """String representation of the current board state.
 
