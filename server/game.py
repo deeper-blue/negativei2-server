@@ -276,6 +276,8 @@ class Game:
             raise ValueError(f"Invalid side '{side}': expected one of ('w', 'b').")
         if not isinstance(id_, str):
             raise TypeError(f"Expected 'id_' argument to be a string, got: {type(id_)}.")
+        if self._players[self._invert(side)] == id_:
+            raise RuntimeError(f"Cannot have the same ID '{id_}' as player on other side '{self._invert(side)}'.")
         if self._players[side] is None:
             self._players[side] = id_
         else:
