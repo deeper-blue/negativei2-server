@@ -203,7 +203,7 @@ class Game:
             },
             'capture': {
                 'capture': self._board.is_capture(move),
-                'piece': self._board.piece_at(move.to_square).symbol().lower() if self._board.is_capture(move) else None
+                'piece': None
             },
             'castle': {
                 'castle': self._board.is_castling(move),
@@ -211,9 +211,20 @@ class Game:
             },
             'en_passant': {
                 'en_passant': self._board.is_en_passant(move),
-                'square': chess.square_name(self._board.ep_square) if self._board.is_en_passant(move) else None
+                'square': None
             }
         }
+
+        # Update the capture piece and en-passant square value to account for en-passant capture
+        if description['capture']['capture']:
+            if description['en_passant']['en_passant']:
+                # NOTE: The 'down' shift performed below to get the square behind the en-passant square comes from:
+                # https://github.com/niklasf/python-chess/blob/102ca5d89e23d5bb9413fb384a78ac4eb4f48bf9/chess/__init__.py#L1963
+                down = -8 if self.turn == WHITE else 8
+                description['en_passant']['square'] = chess.square_name(self._board.ep_square + down)
+                description['capture']['piece'] = 'p' # Always capturing a pawn
+            else:
+                description['capture']['piece'] = self._board.piece_at(move.to_square).symbol().lower()
 
         # Update the castling side value if castling took place
         if description['castle']['castle']:
