@@ -14,7 +14,7 @@ class Game:
         _board:          The internal board object for the game.
         _players:        The sides of the game and their corresponding players.
         _plies:          The ply count (version number).
-        _moves:          The game move history.
+        _history:          The game move history.
 
     Properties:
         The internal attributes listed above can be accessed through properties defined in this class.
@@ -46,7 +46,7 @@ class Game:
         self._board = chess.Board()
         self._players = {WHITE: None, BLACK: None}
         self._plies = 0
-        self._moves = []
+        self._history = []
 
     @property
     def id(self) -> int:
@@ -98,9 +98,9 @@ class Game:
         return chess.Board().variation_san(self._board.move_stack)
 
     @property
-    def moves(self) -> list:
+    def history(self) -> list:
         """Game move history (list of extended move descriptions)."""
-        return self._moves
+        return self._history
 
     @property
     def turn(self) -> str:
@@ -277,8 +277,8 @@ class Game:
         # Add a SAN field to the move description
         detailed_move['san'] = san
 
-        # Add the detailed move to self._moves
-        self._moves.append(detailed_move)
+        # Add the detailed move to self._history
+        self._history.append(detailed_move)
 
         return detailed_move
 
@@ -395,6 +395,6 @@ class Game:
             'ply_count':      self.ply_count,
             'move_count':     self.move_count,
             'pgn':            self.pgn,
-            'moves':          self.moves,
+            'history':        self.history,
             'fen':            self.fen
         }
