@@ -55,7 +55,7 @@ class GameTest(unittest.TestCase):
         self.game_wpt.add_player('1', side='w')
         self.game_wpt.add_player('2', side='b')
 
-        # (Fool's Mate) (2 move checkmate) (Checkmate)
+        # (Fool's Mate) (2 move checkmate for black) (Checkmate)
         self.test_game_1 = copy.deepcopy(self.game_wpt)
         for san in GameTest.moves['fools_mate']:
             self.test_game_1.move(san)
@@ -74,6 +74,16 @@ class GameTest(unittest.TestCase):
         self.test_game_4 = copy.deepcopy(self.game_wpt)
         for san in GameTest.moves['ep_promotions']:
             self.test_game_4.move(san)
+
+        # (Scholar's Mate) (4 move checkmate for white) (Checkmate)
+        self.test_game_5 = copy.deepcopy(self.game_wpt)
+        for san in GameTest.moves['scholars_mate']:
+            self.test_game_5.move(san)
+
+        # Quickest stalemate
+        self.test_game_6 = copy.deepcopy(self.game_wpt)
+        for san in GameTest.moves['quickest_stalemate']:
+            self.test_game_6.move(san)
 
     # NOTE: __init__ tests
     def test_init_invalid_id(self):
@@ -320,7 +330,36 @@ class GameTest(unittest.TestCase):
         """Call property with both players added."""
         self.assertEqual(self.game_wpt.free_slots, 0)
 
-    # TODO: 'result' property
+    # NOTE: 'result' property
+    def test_prop_result_1_0_without_time(self):
+        """Call property when game is a win for white (1-0) not due to time."""
+        self.assertEqual(self.test_game_5.result, '1-0')
+
+    def test_prop_result_0_1_without_time(self):
+        """Call property when game is a win for black (0-1) not due to time."""
+        self.assertEqual(self.test_game_1.result, '0-1')
+
+    def test_prop_result_draw_without_time(self):
+        """Call property when game is a draw (1/2-1/2) not due to time."""
+        self.assertEqual(self.test_game_6.result, '1/2-1/2')
+
+    def test_prop_result_1_0_time(self):
+        """Call property when game is a win for white (1-0) due to time."""
+        self.game_wpt.time_delta(-60, side='b')
+        self.assertEqual(self.game_wpt.result, '1-0')
+
+    def test_prop_result_0_1_time(self):
+        """Call property when game is a win for black (0-1) due to time."""
+        self.game_wpt.time_delta(-60, side='w')
+        self.assertEqual(self.game_wpt.result, '0-1')
+
+    def test_prop_result_draw_time(self):
+        """Call property when game is a draw due to time.
+
+        NOTE: As explained in server/game.py, this case (when both sides run out of time)
+            shouldn't occur in an actual game, but is included as a backup.
+        """
+        self.assertEqual(self.game_ft.result, '1/2-1/2')
 
     # NOTE: 'in_progress' property
     def test_prop_in_progress_when_in_progress(self):
@@ -328,8 +367,8 @@ class GameTest(unittest.TestCase):
         self.assertEqual(self.game.in_progress, True)
 
     def test_prop_in_progress_when_game_over(self):
-        """Call property when game is over (test game 2)."""
-        self.assertEqual(self.test_game_2.in_progress, False)
+        """Call property when game is over (test game 1)."""
+        self.assertEqual(self.test_game_1.in_progress, False)
 
     # TODO: 'game_over' property
 
