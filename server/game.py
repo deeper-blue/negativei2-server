@@ -271,11 +271,11 @@ class Game:
         # Increment ply count after move is successfully made
         self._plies += 1
 
-        # Construct the extended move description
-        detailed_move = self._construct_move_description(move)
-
-        # Add a SAN field to the move description
-        detailed_move['san'] = san
+        # Construct the extended move description (adding a SAN field)
+        # HACK: For logical purposes, it makes most sense for the SAN notation of the move
+        #   to be at the start of the detailed move dict (despite dicts not actually being ordered)
+        #   this was the cleanest way I could find to do it - just merging two dicts together.
+        detailed_move = {**{'san': san}, **self._construct_move_description(move)}
 
         # Add the detailed move to self._history
         self._history.append(detailed_move)
