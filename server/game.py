@@ -199,7 +199,7 @@ class Game:
             'to': chess.square_name(move.to_square),
             'promotion': {
                 'promotion': False if move.promotion is None else True,
-                'piece': move.promotion
+                'piece': None
             },
             'capture': {
                 'capture': self._board.is_capture(move),
@@ -214,6 +214,10 @@ class Game:
                 'square': None
             }
         }
+
+        # Update the promotion piece if promotion took place
+        if description['promotion']['promotion']:
+            description['promotion']['piece'] = chess.PIECE_SYMBOLS[move.promotion].lower()
 
         # Update the capture piece and en-passant square value to account for en-passant capture
         if description['capture']['capture']:
