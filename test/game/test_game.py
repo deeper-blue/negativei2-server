@@ -291,9 +291,34 @@ class GameTest(unittest.TestCase):
         ep_squares = [move['en_passant']['square'] for move in ep_moves]
         self.assertEqual(ep_squares, ['b5', 'd5', 'f5', 'h5'])
 
-    # TODO: 'turn' property
+    # NOTE: 'turn' property
+    def test_prop_turn_white(self):
+        """Call property when it's white's turn."""
+        self.assertEqual(self.game_wpt.turn, WHITE)
 
-    # TODO: 'free_slots' property
+    def test_prop_turn_black(self):
+        """Call property when it's black's turn."""
+        self.game_wpt.move('e4')
+        self.assertEqual(self.game_wpt.turn, BLACK)
+
+    # NOTE: 'free_slots' property
+    def test_prop_free_slots_no_players(self):
+        """Call property with no players added."""
+        self.assertEqual(self.game.free_slots, 2)
+
+    def test_prop_free_slots_white(self):
+        """Call property with only a white player added."""
+        self.game.add_player('1', side='w')
+        self.assertEqual(self.game.free_slots, 1)
+
+    def test_prop_free_slots_black(self):
+        """Call property with only a black player added."""
+        self.game.add_player('1', side='b')
+        self.assertEqual(self.game.free_slots, 1)
+
+    def test_prop_free_slots_both(self):
+        """Call property with both players added."""
+        self.assertEqual(self.game_wpt.free_slots, 0)
 
     # TODO: 'result' property
 
