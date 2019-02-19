@@ -322,6 +322,15 @@ class GameTest(unittest.TestCase):
 
     # TODO: 'result' property
 
+    # NOTE: 'in_progress' property
+    def test_prop_in_progress_when_in_progress(self):
+        """Call property when game is in progress."""
+        self.assertEqual(self.game.in_progress, True)
+
+    def test_prop_in_progress_when_game_over(self):
+        """Call property when game is over (test game 2)."""
+        self.assertEqual(self.test_game_2.in_progress, False)
+
     # TODO: 'game_over' property
 
     # NOTE: 'add_player' function tests
