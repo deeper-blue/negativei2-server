@@ -114,7 +114,11 @@ class Game:
 
     @property
     def result(self) -> str:
-        """The game result (1-0, 0-1, 1/2-1/2, or * if the game is in progress)."""
+        """The game result (1-0, 0-1, 1/2-1/2, or * if the game is in progress).
+
+        TODO: Once resignation and draw offering/accepting has been integrated into the class,
+            this function property will have to be changed to accomodate this.
+        """
 
         result = self._board.result()
 
