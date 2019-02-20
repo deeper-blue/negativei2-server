@@ -360,20 +360,12 @@ class Game:
         output = self._board.__str__()
 
         # Replace white ASCII piece characters with unicode characters
-        output = output.replace('R', '♖')
-        output = output.replace('N', '♘')
-        output = output.replace('B', '♗')
-        output = output.replace('Q', '♕')
-        output = output.replace('K', '♔')
-        output = output.replace('P', '♙')
+        for piece in ['R', 'N', 'B', 'Q', 'K', 'P']:
+            output = output.replace(piece, chess.UNICODE_PIECE_SYMBOLS[piece])
 
         # Replace black ASCII piece characters with unicode characters
-        output = output.replace('r', '♜')
-        output = output.replace('n', '♞')
-        output = output.replace('b', '♝')
-        output = output.replace('q', '♛')
-        output = output.replace('k', '♚')
-        output = output.replace('p', '♟')
+        for piece in ['r', 'n', 'b', 'q', 'k', 'p']:
+            output = output.replace(piece, chess.UNICODE_PIECE_SYMBOLS[piece])
 
         # Add file rank labels
         ranks = [f"{8-i} {rank}" for i, rank in enumerate(output.split('\n'))]
