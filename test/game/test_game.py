@@ -517,4 +517,45 @@ class GameTest(unittest.TestCase):
         """Color inversion for black."""
         self.assertEqual(self.game._invert(BLACK), WHITE)
 
-    # TODO: '__str__' function tests
+    # NOTE: '__str__' function tests
+    def test_str_starting_position(self):
+        """String representation of a game in the starting position."""
+        self.assertEqual(self.game.__str__(), (
+            "8 ♜ ♞ ♝ ♛ ♚ ♝ ♞ ♜\n"
+            "7 ♟ ♟ ♟ ♟ ♟ ♟ ♟ ♟\n"
+            "6 . . . . . . . .\n"
+            "5 . . . . . . . .\n"
+            "4 . . . . . . . .\n"
+            "3 . . . . . . . .\n"
+            "2 ♙ ♙ ♙ ♙ ♙ ♙ ♙ ♙\n"
+            "1 ♖ ♘ ♗ ♕ ♔ ♗ ♘ ♖\n"
+            "  a b c d e f g h"
+        ))
+
+    def test_str_game_2(self):
+        """String representation of test game 2."""
+        self.assertEqual(self.test_game_2.__str__(), (
+            "8 . . . . . . . .\n"
+            "7 . . . ♛ . ♚ ♕ .\n"
+            "6 . . . ♟ . ♜ . .\n"
+            "5 . . ♟ ♙ ♟ ♘ ♟ .\n"
+            "4 ♟ ♟ ♙ . ♙ . . .\n"
+            "3 . . . ♗ . . . .\n"
+            "2 ♙ ♙ . . . . . .\n"
+            "1 . . ♗ . . . . ♔\n"
+            "  a b c d e f g h"
+        ))
+
+    def test_str_game_4(self):
+        """String representation of test game 4."""
+        self.assertEqual(self.test_game_4.__str__(), (
+            "8 ♜ . . ♗ . ♚ ♞ ♖\n"
+            "7 ♟ . . ♕ . . . .\n"
+            "6 ♝ . . . . . . .\n"
+            "5 . . . . . . . .\n"
+            "4 . ♞ . . . . . .\n"
+            "3 . . . . . ♕ . .\n"
+            "2 . ♙ . ♙ . ♙ . ♙\n"
+            "1 ♖ ♘ ♗ . ♔ ♗ ♘ ♖\n"
+            "  a b c d e f g h"
+        ))
