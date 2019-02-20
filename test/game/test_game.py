@@ -473,7 +473,36 @@ class GameTest(unittest.TestCase):
         self.game_wpt.time_delta(-100)
         self.assertEqual(self.game_wpt.remaining_time[WHITE], 0)
 
-    # TODO: '_construct_move_description' function tests
+    # NOTE: '_construct_move_description' function tests
+    #   Most of the functionality for this function is actually tested in the 'history' property.
+    def test_construct_move_description_wrong_move(self):
+        """Construct move description of a move which isn't on the top of the move stack."""
+        self.game_wpt.move('e4')
+        move = chess.Move.from_uci('a7c6')
+        self.assertRaises(ValueError, lambda: self.game_wpt._construct_move_description(move))
+
+    def test_construct_move_description_correct_move(self):
+        """Construct move description of a move which is on the top of the move stack."""
+        move = self.game_wpt.board.push_san('Nc3')
+
+        # Check that the move stack manipulation done by the function is okay
+        self.assertEqual(self.game_wpt.board.peek(), move)
+        desc = self.game_wpt._construct_move_description(move)
+        self.assertEqual(self.game_wpt.board.peek(), move)
+
+        # Check that the move description is correct
+        self.assertEqual(desc, {
+            'side': 'w',
+            'ply_count': 0,
+            'move_count': 1,
+            'piece': 'n',
+            'from': 'b1',
+            'to': 'c3',
+            'promotion': {'promotion': False, 'piece': None},
+            'capture': {'capture': False, 'piece': None},
+            'castle': {'castle': False, 'side': None},
+            'en_passant': {'en_passant': False, 'square': None}
+        })
 
     # NOTE: '_invert' function tests
     def test_invert_invalid_color(self):
