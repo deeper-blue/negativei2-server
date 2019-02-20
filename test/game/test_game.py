@@ -370,7 +370,27 @@ class GameTest(unittest.TestCase):
         """When game is over (test game 1)."""
         self.assertEqual(self.test_game_1.in_progress, False)
 
-    # TODO: 'game_over' property
+    # NOTE: 'game_over' property
+    def test_prop_game_over_in_progress(self):
+        """When game is still in progress."""
+        self.assertEqual(self.game.game_over, {'game_over': False, 'reason': None})
+
+    def test_prop_game_over_time(self):
+        """When game is over due to time."""
+        self.assertEqual(self.game_ft.game_over, {'game_over': True, 'reason': 'Time'})
+
+    def test_prop_game_over_game_2(self):
+        """When game is over due to resignation."""
+        # TODO: Fix this test when resignation actually works.
+        self.assertEqual(self.test_game_2.game_over, {'game_over': False, 'reason': None})
+
+    def test_prop_game_over_game_5(self):
+        """When game is over due to checkmate."""
+        self.assertEqual(self.test_game_5.game_over, {'game_over': True, 'reason': 'Checkmate'})
+
+    def test_prop_game_over_game_6(self):
+        """When game is over due to stalemate."""
+        self.assertEqual(self.test_game_6.game_over, {'game_over': True, 'reason': 'Stalemate'})
 
     # NOTE: 'add_player' function tests
     def test_add_player_invalid_side(self):
