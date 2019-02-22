@@ -14,7 +14,8 @@ class Game:
         _board:          The internal board object for the game.
         _players:        The sides of the game and their corresponding players.
         _plies:          The ply count (version number).
-        _history:          The game move history.
+        _history:        The game move history.
+        _resigned:       The resignation status for both sides.
 
     Properties:
         The internal attributes listed above can be accessed through properties defined in this class.
@@ -47,6 +48,7 @@ class Game:
         self._players = {WHITE: None, BLACK: None}
         self._plies = 0
         self._history = []
+        self._resigned = {WHITE: False, BLACK: False}
 
     @property
     def id(self) -> int:
@@ -122,6 +124,14 @@ class Game:
 
         result = self._board.result()
 
+        # Override result to black win if white resigns
+        if self._resigned[WHITE]:
+            result = '0-1'
+
+        # Override result to white win if black resigns
+        if self._resigned[BLACK]:
+            result = '1-0'
+
         # Override result to black win if white has no time
         if self._remaining_time[WHITE] == 0:
             result = '0-1'
@@ -144,12 +154,7 @@ class Game:
     @property
     def game_over(self) -> dict:
         """The game-over status (and game-over reason if the game is over)."""
-        game_over = False
-        reason = None
-
         if self._board.is_game_over():
-            game_over = True
-
             # If the game is over for none of the other reasons, this is only remaining reason.
             # It is tricky to check for draw claims, so leave it as the default and override it.
             reason = 'Draw claimed'
@@ -165,13 +170,18 @@ class Game:
             if self._board.is_fivefold_repetition():
                 reason = 'Five-fold repetition'
 
+            return {'game_over': True, 'reason': reason}
+
+        # Check for resignation
+        if self._resigned[WHITE] or self._resigned[BLACK]:
+            return {'game_over': True, 'reason': 'Resignation'}
+
         # Time as a game-over reason should take more priority over the other reasons
         if (self._remaining_time[WHITE] == 0) or (self._remaining_time[BLACK] == 0):
-            # Out of time
-            game_over = True
-            reason = 'Time'
+            return {'game_over': True, 'reason': 'Time'}
 
-        return {'game_over': game_over, 'reason': reason}
+        # If none of the above, then the game is not over
+        return {'game_over': False, 'reason': None}
 
     def _construct_move_description(self, move) -> dict:
         """Constructs an extended move description for a single move, detailing all necessary information about the move.
@@ -348,6 +358,29 @@ class Game:
 
         # Apply the time delta
         self._remaining_time[side] += delta
+
+    def resign(self, side=None) -> None:
+        """Resigns the game for a side.
+
+        Arguments:
+            side: The side to resign. Expects:
+                - 'w' or 'b'
+                - None (will automatically select whichever side's turn it currently is)
+        """
+
+        # If no side argument given, then assume it's the current side to play
+        side = side if side is not None else self.turn
+
+        # If game is already over, don't do anything
+        if not self.in_progress:
+            return
+
+        # If player is already resigned, don't do anything
+        if self._resigned[side]:
+            return
+
+        # Resign
+        self._resigned[side] = True
 
     def __str__(self) -> str:
         """String representation of the current board state.
