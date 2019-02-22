@@ -4,6 +4,12 @@ import chess.pgn
 WHITE = 'w'
 BLACK = 'b'
 
+SCORES = {
+    WHITE: '1-0',
+    BLACK: '0-1',
+    'draw': '1/2-1/2'
+}
+
 class Game:
     """Class representing and encapsulating the logic required for handling a chess game with time controls.
 
@@ -126,23 +132,23 @@ class Game:
 
         # Override result to black win if white resigns
         if self._resigned[WHITE]:
-            result = '0-1'
+            result = SCORES[BLACK]
 
         # Override result to white win if black resigns
         if self._resigned[BLACK]:
-            result = '1-0'
+            result = SCORES[WHITE]
 
         # Override result to black win if white has no time
         if self._remaining_time[WHITE] == 0:
-            result = '0-1'
+            result = SCORES[BLACK]
 
         # Override result to white win if black has no time
         if self._remaining_time[BLACK] == 0:
-            result = '1-0'
+            result = SCORES[WHITE]
 
         # Override result to draw if both sides have no time (this should never occur, but just in case)
         if (self._remaining_time[WHITE] == 0) and (self._remaining_time[BLACK] == 0):
-            result = '1/2-1/2'
+            result = SCORES['draw']
 
         return result
 

@@ -2,7 +2,7 @@
 
 import chess
 import unittest
-from server.game import Game, WHITE, BLACK
+from server.game import Game, WHITE, BLACK, SCORES
 
 import fileinput
 from os import listdir
@@ -100,7 +100,7 @@ class GameTest(unittest.TestCase):
 
     def test_init_zero_time_control_result(self):
         """Time controls set to 0 (Each side has no time)."""
-        self.assertEqual(self.game_ft.result, '1/2-1/2')
+        self.assertEqual(self.game_ft.result, SCORES['draw'])
         self.assertEqual(self.game_ft.in_progress, False)
 
     # NOTE: Property initial value tests
@@ -333,25 +333,25 @@ class GameTest(unittest.TestCase):
     # NOTE: 'result' property
     def test_prop_result_1_0_without_time(self):
         """When game is a win for white (1-0) not due to time."""
-        self.assertEqual(self.test_game_5.result, '1-0')
+        self.assertEqual(self.test_game_5.result, SCORES[WHITE])
 
     def test_prop_result_0_1_without_time(self):
         """When game is a win for black (0-1) not due to time."""
-        self.assertEqual(self.test_game_1.result, '0-1')
+        self.assertEqual(self.test_game_1.result, SCORES[BLACK])
 
     def test_prop_result_draw_without_time(self):
         """When game is a draw (1/2-1/2) not due to time."""
-        self.assertEqual(self.test_game_6.result, '1/2-1/2')
+        self.assertEqual(self.test_game_6.result, SCORES['draw'])
 
     def test_prop_result_1_0_time(self):
         """When game is a win for white (1-0) due to time."""
         self.game_wpt.time_delta(-60, side='b')
-        self.assertEqual(self.game_wpt.result, '1-0')
+        self.assertEqual(self.game_wpt.result, SCORES[WHITE])
 
     def test_prop_result_0_1_time(self):
         """When game is a win for black (0-1) due to time."""
         self.game_wpt.time_delta(-60, side='w')
-        self.assertEqual(self.game_wpt.result, '0-1')
+        self.assertEqual(self.game_wpt.result, SCORES[BLACK])
 
     def test_prop_result_draw_time(self):
         """When game is a draw due to time.
@@ -359,7 +359,7 @@ class GameTest(unittest.TestCase):
         NOTE: As explained in server/game.py, this case (when both sides run out of time)
             shouldn't occur in an actual game, but is included as a backup.
         """
-        self.assertEqual(self.game_ft.result, '1/2-1/2')
+        self.assertEqual(self.game_ft.result, SCORES['draw'])
 
     # NOTE: 'in_progress' property
     def test_prop_in_progress_when_in_progress(self):
@@ -501,13 +501,13 @@ class GameTest(unittest.TestCase):
     def test_resign_default_side_white(self):
         """Make a resignation without specifying a side (when it's white's turn)"""
         self.game_wpt.resign()
-        self.assertEqual(self.game_wpt.result, '0-1')
+        self.assertEqual(self.game_wpt.result, SCORES[BLACK])
 
     def test_resign_default_side_black(self):
         """Make a resignation without specifying a side (when it's black's turn)"""
         self.game_wpt.move('e4')
         self.game_wpt.resign()
-        self.assertEqual(self.game_wpt.result, '1-0')
+        self.assertEqual(self.game_wpt.result, SCORES[WHITE])
 
     def test_resign_in_ended(self):
         """Make a resignation in a game which is already ended (due to other reasons)."""
@@ -517,7 +517,7 @@ class GameTest(unittest.TestCase):
     def test_resign_with_specified_side(self):
         """Make a resignation for the opposite side."""
         self.game_wpt.resign(side=BLACK)
-        self.assertEqual(self.game_wpt.result, '1-0')
+        self.assertEqual(self.game_wpt.result, SCORES[WHITE])
 
     # NOTE: '_construct_move_description' function tests
     #   Most of the functionality for this function is actually tested in the 'history' property.
