@@ -493,6 +493,32 @@ class GameTest(unittest.TestCase):
         self.game_wpt.time_delta(-100)
         self.assertEqual(self.game_wpt.remaining_time[WHITE], 0)
 
+    # NOTE: 'resign' function tests
+    def test_resign_invalid_side(self):
+        """Make a resignation with an invalid side."""
+        self.assertRaises(ValueError, lambda: self.game_wpt.resign(side='z'))
+
+    def test_resign_default_side_white(self):
+        """Make a resignation without specifying a side (when it's white's turn)"""
+        self.game_wpt.resign()
+        self.assertEqual(self.game_wpt.result, '0-1')
+
+    def test_resign_default_side_black(self):
+        """Make a resignation without specifying a side (when it's black's turn)"""
+        self.game_wpt.move('e4')
+        self.game_wpt.resign()
+        self.assertEqual(self.game_wpt.result, '1-0')
+
+    def test_resign_in_ended(self):
+        """Make a resignation in a game which is already ended (due to other reasons)."""
+        self.test_game_1.resign()
+        self.assertEqual(self.test_game_1._resigned[WHITE], False)
+
+    def test_resign_with_specified_side(self):
+        """Make a resignation for the opposite side."""
+        self.game_wpt.resign(side=BLACK)
+        self.assertEqual(self.game_wpt.result, '1-0')
+
     # NOTE: '_construct_move_description' function tests
     #   Most of the functionality for this function is actually tested in the 'history' property.
     def test_construct_move_description_wrong_move(self):
