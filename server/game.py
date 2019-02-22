@@ -371,6 +371,9 @@ class Game:
         # If no side argument given, then assume it's the current side to play
         side = side if side is not None else self.turn
 
+        if side not in (WHITE, BLACK):
+            raise ValueError(f"Invalid side '{side}': expected one of ('w', 'b').")
+
         # If game is already over, don't do anything
         if not self.in_progress:
             return
