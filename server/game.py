@@ -124,11 +124,12 @@ class Game:
     def result(self) -> str:
         """The game result (1-0, 0-1, 1/2-1/2, or * if the game is in progress).
 
-        TODO: Once resignation and draw offering/accepting has been integrated into the class,
+        TODO: Once draw offering/accepting has been integrated into the class,
             this function property will have to be changed to accomodate this.
         """
 
-        result = self._board.result()
+        # Always claim a draw when possible (By three-fold repetition or fifty-move rule)
+        result = self._board.result(claim_draw=True)
 
         # Override result to black win if white resigns
         if self._resigned[WHITE]:
@@ -160,13 +161,15 @@ class Game:
     @property
     def game_over(self) -> dict:
         """The game-over status (and game-over reason if the game is over)."""
-        if self._board.is_game_over():
-            # If the game is over for none of the other reasons, this is only remaining reason.
-            # It is tricky to check for draw claims, so leave it as the default and override it.
-            reason = 'Draw claimed'
 
+        # Always claim a draw when possible (By three-fold repetition or fifty-move rule)
+        if self._board.is_game_over(claim_draw=True):
+            if self._board.can_claim_threefold_repetition():
+                reason = 'Three-fold repetition'
+            if self._board.can_claim_fifty_moves():
+                reason = 'Fifty move rule'
             if self._board.is_seventyfive_moves():
-                reason = 'Seventy-five move role'
+                reason = 'Seventy-five move rule'
             if self._board.is_insufficient_material():
                 reason = 'Insufficient material'
             if self._board.is_checkmate():
