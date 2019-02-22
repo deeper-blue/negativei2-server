@@ -64,6 +64,7 @@ class GameTest(unittest.TestCase):
         self.test_game_2 = copy.deepcopy(self.game_wpt)
         for san in GameTest.moves['yates_znosko_borovsky']:
             self.test_game_2.move(san)
+        self.test_game_2.resign()
 
         # (Andreikin-Karjakin) (Short checkmate) (Checkmate)
         self.test_game_3 = copy.deepcopy(self.game_wpt)
@@ -361,6 +362,12 @@ class GameTest(unittest.TestCase):
         """
         self.assertEqual(self.game_ft.result, SCORES['draw'])
 
+    def test_prop_result_threefold(self):
+        """When a game ends due to three-fold repetition."""
+        for move in ['Nc3', 'Nc6', 'Nb1', 'Nb8', 'Nc3', 'Nc6', 'Nb1']:
+            self.game_wpt.move(move)
+        self.assertEqual(self.game_wpt.result, SCORES['draw'])
+
     # NOTE: 'in_progress' property
     def test_prop_in_progress_when_in_progress(self):
         """When game is in progress."""
@@ -379,10 +386,15 @@ class GameTest(unittest.TestCase):
         """When game is over due to time."""
         self.assertEqual(self.game_ft.game_over, {'game_over': True, 'reason': 'Time'})
 
+    def test_prop_game_over_threefold(self):
+        """When game is over due to three-fold repetition."""
+        for move in ['Nc3', 'Nc6', 'Nb1', 'Nb8', 'Nc3', 'Nc6', 'Nb1']:
+            self.game_wpt.move(move)
+        self.assertEqual(self.game_wpt.game_over, {'game_over': True, 'reason': 'Three-fold repetition'})
+
     def test_prop_game_over_game_2(self):
         """When game is over due to resignation."""
-        # TODO: Fix this test when resignation actually works.
-        self.assertEqual(self.test_game_2.game_over, {'game_over': False, 'reason': None})
+        self.assertEqual(self.test_game_2.game_over, {'game_over': True, 'reason': 'Resignation'})
 
     def test_prop_game_over_game_5(self):
         """When game is over due to checkmate."""
