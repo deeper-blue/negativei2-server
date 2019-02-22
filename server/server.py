@@ -1,4 +1,5 @@
 import json
+import logging
 from flask import Flask, request, abort, jsonify
 from schemas.game import MakeMoveInput, CreateGameInput
 from schemas.controller import ControllerRegisterInput
@@ -58,3 +59,7 @@ def controller_poll(board_id):
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0')
+else:
+    gunicorn_logger = logging.getLogger('gunicorn.error')
+    app.logger.handlers = gunicorn_logger.handlers
+    app.logger.setLevel(gunicorn_logger.level)
