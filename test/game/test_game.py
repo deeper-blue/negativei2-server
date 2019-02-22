@@ -47,13 +47,13 @@ class GameTest(unittest.TestCase):
 
         # Game with players (and no time controls)
         self.game_wp = Game(1)
-        self.game_wp.add_player('1', side='w')
-        self.game_wp.add_player('2', side='b')
+        self.game_wp.add_player('1', side=WHITE)
+        self.game_wp.add_player('2', side=BLACK)
 
         # Game with players and time controls
         self.game_wpt = Game(1, time_controls=60)
-        self.game_wpt.add_player('1', side='w')
-        self.game_wpt.add_player('2', side='b')
+        self.game_wpt.add_player('1', side=WHITE)
+        self.game_wpt.add_player('2', side=BLACK)
 
         # (Fool's Mate) (2 move checkmate for black) (Checkmate)
         self.test_game_1 = copy.deepcopy(self.game_wpt)
@@ -318,12 +318,12 @@ class GameTest(unittest.TestCase):
 
     def test_prop_free_slots_white(self):
         """With only a white player added."""
-        self.game.add_player('1', side='w')
+        self.game.add_player('1', side=WHITE)
         self.assertEqual(self.game.free_slots, 1)
 
     def test_prop_free_slots_black(self):
         """With only a black player added."""
-        self.game.add_player('1', side='b')
+        self.game.add_player('1', side=BLACK)
         self.assertEqual(self.game.free_slots, 1)
 
     def test_prop_free_slots_both(self):
@@ -345,12 +345,12 @@ class GameTest(unittest.TestCase):
 
     def test_prop_result_1_0_time(self):
         """When game is a win for white (1-0) due to time."""
-        self.game_wpt.time_delta(-60, side='b')
+        self.game_wpt.time_delta(-60, side=BLACK)
         self.assertEqual(self.game_wpt.result, SCORES[WHITE])
 
     def test_prop_result_0_1_time(self):
         """When game is a win for black (0-1) due to time."""
-        self.game_wpt.time_delta(-60, side='w')
+        self.game_wpt.time_delta(-60, side=WHITE)
         self.assertEqual(self.game_wpt.result, SCORES[BLACK])
 
     def test_prop_result_draw_time(self):
@@ -399,22 +399,22 @@ class GameTest(unittest.TestCase):
 
     def test_add_player_invalid_id(self):
         """Add player with invalid ID."""
-        self.assertRaises(TypeError, lambda: self.game.add_player(1, side='w'))
+        self.assertRaises(TypeError, lambda: self.game.add_player(1, side=WHITE))
 
     def test_add_player_same_id(self):
         """Add player with same ID as player on opposite side."""
-        self.game.add_player('1', side='w')
-        self.assertRaises(RuntimeError, lambda: self.game.add_player('1', side='b'))
+        self.game.add_player('1', side=WHITE)
+        self.assertRaises(RuntimeError, lambda: self.game.add_player('1', side=BLACK))
 
     def test_add_player_occupied(self):
         """Add two players to the same side."""
-        self.game.add_player('1', side='w')
-        self.assertRaises(RuntimeError, lambda: self.game.add_player('2', side='w'))
+        self.game.add_player('1', side=WHITE)
+        self.assertRaises(RuntimeError, lambda: self.game.add_player('2', side=WHITE))
 
     def test_add_player_free(self):
         """Add two players to a game (with free slots)."""
-        self.game.add_player('1', side='w')
-        self.game.add_player('2', side='b')
+        self.game.add_player('1', side=WHITE)
+        self.game.add_player('2', side=BLACK)
         self.assertEqual(self.game.players, {WHITE: '1', BLACK: '2'})
 
     # NOTE: 'move' function tests
@@ -428,12 +428,12 @@ class GameTest(unittest.TestCase):
 
     def test_move_with_no_white_player(self):
         """Make a white-side move in a game with no white player."""
-        self.game.add_player('1', side='b')
+        self.game.add_player('1', side=BLACK)
         self.assertRaises(RuntimeError, lambda: self.game.move('e4'))
 
     def test_move_with_no_black_player(self):
         """Make a black-side move in a game with no black player."""
-        self.game.add_player('1', side='w')
+        self.game.add_player('1', side=WHITE)
         self.game.move('e4')
         self.assertRaises(RuntimeError, lambda: self.game.move('e5'))
 
