@@ -47,7 +47,7 @@ def get_game(game_id):
 
 @app.route('/creategame', methods=["POST"])
 def create_game():
-    errors = CreateGameInput().validate(request.form)
+    errors = CreateGameInput(db).validate(request.form)
     if errors:
         abort(BAD_REQUEST, str(errors))
     return get_game(0)
