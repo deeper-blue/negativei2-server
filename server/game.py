@@ -325,6 +325,10 @@ class Game:
         # Increment ply count after move is successfully made
         self._plies += 1
 
+        # Clear any draw offers made by either player
+        for side in (WHITE, BLACK):
+            self.decline_draw(side=side)
+
         # Construct the extended move description (adding a SAN field)
         # HACK: For logical purposes, it makes most sense for the SAN notation of the move
         #   to be at the start of the detailed move dict (despite dicts not actually being ordered)
@@ -444,7 +448,7 @@ class Game:
 
         # If the opponent has offered a draw, accept it
         if self._draw_offers[self._invert(side)]['made']:
-            self.accept_draw()
+            self.accept_draw(side=side)
 
         # Offer the draw
         self._draw_offers[side]['made'] = True

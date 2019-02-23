@@ -474,6 +474,13 @@ class GameTest(unittest.TestCase):
         """Make a move (with invalid SAN in the current context)."""
         self.assertRaises(ValueError, lambda: self.game_wpt.move('e6'))
 
+    def test_move_clears_draw_offers(self):
+        """Make a move, and check if draw offers are cleared."""
+        self.game_wpt.offer_draw()
+        self.assertEqual(self.game_wpt.draw_offers[WHITE]['made'], True)
+        self.game_wpt.move('e4')
+        self.assertEqual(self.game_wpt.draw_offers[WHITE]['made'], False)
+
     def test_move_increments_ply_count(self):
         """Making a move increments the ply count."""
         self.assertEqual(self.game_wpt.ply_count, 0)
@@ -582,8 +589,7 @@ class GameTest(unittest.TestCase):
     def test_offer_draw_when_opponent_has_offered(self):
         """Offer a draw in a game where the opponent has already offered a draw."""
         self.game_wpt.offer_draw()
-        self.game_wpt.move('e4')
-        self.game_wpt.offer_draw()
+        self.game_wpt.offer_draw(side=BLACK)
         self.assertEqual(self.game_wpt.draw_offers[WHITE]['accepted'], True)
 
     def test_offer_draw_specified_side(self):
@@ -599,25 +605,22 @@ class GameTest(unittest.TestCase):
 
     def test_accept_draw_default_side_white(self):
         """Accept a draw without specifying a side (when it's white's turn)"""
-        self.game_wpt.offer_draw()
-        self.game_wpt.move('e4')
+        self.game_wpt.offer_draw(side=BLACK)
         self.game_wpt.accept_draw()
-        self.assertEqual(self.game_wpt.draw_offers[WHITE]['accepted'], True)
+        self.assertEqual(self.game_wpt.draw_offers[BLACK]['accepted'], True)
 
     def test_accept_draw_default_side_black(self):
         """Accept a draw without specifying a side (when it's black's turn)"""
         self.game_wpt.move('e4')
-        self.game_wpt.offer_draw()
-        self.game_wpt.move('e5')
+        self.game_wpt.offer_draw(side=WHITE)
         self.game_wpt.accept_draw()
-        self.assertEqual(self.game_wpt.draw_offers[BLACK]['accepted'], True)
+        self.assertEqual(self.game_wpt.draw_offers[WHITE]['accepted'], True)
 
     def test_accept_draw_in_ended(self):
         """Accept a draw in a game which is already ended."""
         self.game_wpt.offer_draw()
-        self.game_wpt.move('e4')
-        self.game_wpt.resign()
-        self.game_wpt.accept_draw()
+        self.game_wpt.resign(side=BLACK)
+        self.game_wpt.accept_draw(side=BLACK)
         self.assertEqual(self.game_wpt.draw_offers, {
             WHITE: {'made': True, 'accepted': False},
             BLACK: {'made': False, 'accepted': False}
@@ -670,9 +673,8 @@ class GameTest(unittest.TestCase):
     def test_decline_draw_in_ended(self):
         """Decline a draw in a game which is already ended."""
         self.game_wpt.offer_draw()
-        self.game_wpt.move('e4')
-        self.game_wpt.resign()
-        self.game_wpt.decline_draw()
+        self.game_wpt.resign(side=BLACK)
+        self.game_wpt.decline_draw(side=BLACK)
         self.assertEqual(self.game_wpt.draw_offers, {
             WHITE: {'made': True, 'accepted': False},
             BLACK: {'made': False, 'accepted': False}
