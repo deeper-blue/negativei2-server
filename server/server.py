@@ -4,10 +4,8 @@ import logging
 from flask import Flask, request, abort, jsonify
 from schemas.game import MakeMoveInput, CreateGameInput
 from schemas.controller import ControllerRegisterInput
-import firebase_admin
 import google.cloud
 from google.cloud import firestore
-from firebase_admin import credentials
 
 # because Heroku uses an ephemeral file system (https://devcenter.heroku.com/articles/active-storage-on-heroku)
 # we need to write the key that is stored in FIREBASE_SERVICE_ACCOUNT_JSON to a file
@@ -20,11 +18,6 @@ ACCOUNT_JSON_FILENAME = "firebase_account_cred.json"
 
 with open(ACCOUNT_JSON_FILENAME, 'w') as account_file:
     account_file.write(raw_account)
-
-cred = credentials.Certificate(ACCOUNT_JSON_FILENAME)
-app = firebase_admin.initialize_app(cred, {
-    'projectId': "assistive-chess-robot"
-})
 
 db = firestore.Client("assistive-chess-robot")
 GAMES_COLLECTION = "games"
