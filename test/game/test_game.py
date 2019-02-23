@@ -145,6 +145,15 @@ class GameTest(unittest.TestCase):
     def test_initial_property_free_slots(self):
         self.assertEqual(self.game.free_slots, 2)
 
+    def test_initial_property_resigned(self):
+        self.assertEqual(self.game.resigned, {WHITE: False, BLACK: False})
+
+    def test_initial_property_draw_offers(self):
+        self.assertEqual(self.game.draw_offers, {
+            WHITE: {'made': False, 'accepted': False},
+            BLACK: {'made': False, 'accepted': False}
+        })
+
     def test_initial_property_result(self):
         self.assertEqual(self.game.result, '*')
 
