@@ -473,6 +473,34 @@ class Game:
         # Accept the draw made by the other side
         self._draw_offers[self._invert(side)]['accepted'] = True
 
+    def decline_draw(self, side=None) -> None:
+        """Decline a draw offer made by the other side.
+
+        Arguments:
+            side: The side accepting the draw.
+        """
+
+        # If no side argument given, then assume it's the current side to play
+        side = side if side is not None else self.turn
+
+        if side not in (WHITE, BLACK):
+            raise ValueError(f"Invalid side '{side}': expected one of ('w', 'b').")
+
+        # Don't allow draw declining if the game is not in progress
+        if not self.in_progress:
+            return
+
+        # Don't allow draw declining if the opposite side hasn't made a draw offer
+        if not self._draw_offers[self._invert(side)]['made']:
+            return
+
+        # Don't allow draw declining if the offer was already accepted
+        if self._draw_offers[self._invert(side)]['accepted']:
+            return
+
+        # Decline the draw made by the other side (Reset 'made' so that future draws can be offered again)
+        self._draw_offers[self._invert(side)]['made'] = False
+
     def __str__(self) -> str:
         """String representation of the current board state.
 
