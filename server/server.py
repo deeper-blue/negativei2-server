@@ -1,8 +1,33 @@
+import os
 import json
 import logging
 from flask import Flask, request, abort, jsonify
 from schemas.game import MakeMoveInput, CreateGameInput
 from schemas.controller import ControllerRegisterInput
+import firebase_admin
+import google.cloud
+from google.cloud import firestore
+from firebase_admin import credentials
+
+# because Heroku uses an ephemeral file system (https://devcenter.heroku.com/articles/active-storage-on-heroku)
+# we need to write the key that is stored in FIREBASE_SERVICE_ACCOUNT_JSON to a file
+# before we can pass it to firebase admin
+
+# the below will error if you haven't set FIREBASE_SERVICE_ACCOUNT_JSON
+raw_account = os.environ["FIREBASE_SERVICE_ACCOUNT_JSON"]
+
+ACCOUNT_JSON_FILENAME = "firebase_account_cred.json"
+
+with open(ACCOUNT_JSON_FILENAME, 'w') as account_file:
+    account_file.write(raw_account)
+
+cred = credentials.Certificate(ACCOUNT_JSON_FILENAME)
+app = firebase_admin.initialize_app(cred, {
+    'projectId': "assistive-chess-robot"
+})
+
+db = firestore.Client("assistive-chess-robot")
+GAMES_COLLECTION = "games"
 
 BAD_REQUEST = 400
 REQUEST_OK = 'OK'
@@ -22,22 +47,10 @@ def make_move():
 
 @app.route('/getgame/<game_id>')
 def get_game(game_id):
-    # example of return type. Possible that there is established standard
-    # we will find out when incorporating an actual chess library
-    return jsonify({"board": "kjdiIjfjekKojfjLKJfkj",
-            "players": {
-                "white": {
-                    "id": "playerID1",
-                    "time-remaining": "3496",
-                    "moves": ["E3->D4", "D4->D5"]
-                },
-                "black": {
-                    "id": "playerID2",
-                    "time-remaining": "3496",
-                    "moves": ["B3->C4", "C4->B5"]
-                }
-            }
-           })
+    doc_ref = db.collection(GAMES_COLLECTION).document(game_id).get()
+    if doc_ref.exists:
+        return jsonify(doc_ref.to_dict())
+    abort(BAD_REQUEST, "Document doesn't exist!")
 
 @app.route('/creategame', methods=["POST"])
 def create_game():

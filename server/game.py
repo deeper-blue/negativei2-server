@@ -34,10 +34,10 @@ class Game:
     """
 
     def __init__(self, id_, time_controls=None):
-        if isinstance(id_, int):
+        if isinstance(id_, str):
             self._id = id_
         else:
-            raise TypeError(f"Expected '_id' argument to be an int, got: {type(id_)}.")
+            raise TypeError(f"Expected '_id' argument to be a str, got: {type(id_)}.")
 
         if isinstance(time_controls, int):
             if time_controls < 0:
@@ -57,7 +57,7 @@ class Game:
         self._resigned = {WHITE: False, BLACK: False}
 
     @property
-    def id(self) -> int:
+    def id(self) -> str:
         """The game ID representing the Game object."""
         return self._id
 
