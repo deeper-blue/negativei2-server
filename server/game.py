@@ -158,6 +158,10 @@ class Game:
         if self._resigned[BLACK]:
             result = SCORES[WHITE]
 
+        # Override result to draw if either side accepts a draw
+        if self._draw_offers[WHITE]['accepted'] or self._draw_offers[BLACK]['accepted']:
+            result = SCORES['draw']
+
         # Override result to black win if white has no time
         if self._remaining_time[WHITE] == 0:
             result = SCORES[BLACK]
@@ -203,6 +207,10 @@ class Game:
         # Check for resignation
         if self._resigned[WHITE] or self._resigned[BLACK]:
             return {'game_over': True, 'reason': 'Resignation'}
+
+        # Check for accepted draw offers
+        if self._draw_offers[WHITE]['accepted'] or self._draw_offers[BLACK]['accepted']:
+            return {'game_over': True, 'reason': 'Draw by agreement'}
 
         # Time as a game-over reason should take more priority over the other reasons
         if (self._remaining_time[WHITE] == 0) or (self._remaining_time[BLACK] == 0):
@@ -412,6 +420,58 @@ class Game:
 
         # Resign
         self._resigned[side] = True
+
+    def offer_draw(self, side=None) -> None:
+        """Offer a draw to the other side.
+
+        Arguments:
+            side: The side offering the draw.
+        """
+
+        # If no side argument given, then assume it's the current side to play
+        side = side if side is not None else self.turn
+
+        if side not in (WHITE, BLACK):
+            raise ValueError(f"Invalid side '{side}': expected one of ('w', 'b').")
+
+        # Don't allow draw offering if the game is not in progress
+        if not self.in_progress:
+            return
+
+        # If draw offer is already made, don't do anything
+        if self._draw_offers[side]['made']:
+            return
+
+        # If the opponent has offered a draw, accept it
+        if self._draw_offers[self._invert(side)]['made']:
+            self.accept_draw()
+
+        # Offer the draw
+        self._draw_offers[side]['made'] = True
+
+    def accept_draw(self, side=None) -> None:
+        """Accept a draw offer made by the other side.
+
+        Arguments:
+            side: The side accepting the draw.
+        """
+
+        # If no side argument given, then assume it's the current side to play
+        side = side if side is not None else self.turn
+
+        if side not in (WHITE, BLACK):
+            raise ValueError(f"Invalid side '{side}': expected one of ('w', 'b').")
+
+        # Don't allow draw accepting if the game is not in progress
+        if not self.in_progress:
+            return
+
+        # Don't allow draw accepting if the opposite side hasn't made a draw offer
+        if not self._draw_offers[self._invert(side)]['made']:
+            return
+
+        # Accept the draw made by the other side
+        self._draw_offers[self._invert(side)]['accepted'] = True
 
     def __str__(self) -> str:
         """String representation of the current board state.
