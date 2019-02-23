@@ -130,6 +130,16 @@ class Game:
         return sum([1 if player is None else 0 for player in self.players.values()])
 
     @property
+    def resigned(self) -> dict:
+        """The resignation status for both sides."""
+        return self._resigned
+
+    @property
+    def draw_offers(self) -> dict:
+        """The draw offer status for both sides."""
+        return self._draw_offers
+
+    @property
     def result(self) -> str:
         """The game result (1-0, 0-1, 1/2-1/2, or * if the game is in progress).
 
@@ -442,6 +452,8 @@ class Game:
             'free_slots':     self.free_slots,
             'time_controls':  self.time_controls,
             'remaining_time': self.remaining_time,
+            'resigned':       self.resigned,
+            'draw_offers':    self.draw_offers,
             'in_progress':    self.in_progress,
             'result':         self.result,
             'game_over':      self.game_over,
