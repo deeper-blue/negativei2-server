@@ -377,6 +377,12 @@ class GameTest(unittest.TestCase):
             self.game_wpt.move(move)
         self.assertEqual(self.game_wpt.result, SCORES['draw'])
 
+    def test_prop_result_draw_agreement(self):
+        """When a game ends due to draw agreement."""
+        self.game_wpt.offer_draw()
+        self.game_wpt.accept_draw(side=BLACK)
+        self.assertEqual(self.game_wpt.result, SCORES['draw'])
+
     # NOTE: 'in_progress' property
     def test_prop_in_progress_when_in_progress(self):
         """When game is in progress."""
@@ -400,6 +406,12 @@ class GameTest(unittest.TestCase):
         for move in ['Nc3', 'Nc6', 'Nb1', 'Nb8', 'Nc3', 'Nc6', 'Nb1']:
             self.game_wpt.move(move)
         self.assertEqual(self.game_wpt.game_over, {'game_over': True, 'reason': 'Three-fold repetition'})
+
+    def test_prop_game_over_draw_agreement(self):
+        """When game is over due to draw agreement."""
+        self.game_wpt.offer_draw()
+        self.game_wpt.accept_draw(side=BLACK)
+        self.assertEqual(self.game_wpt.game_over, {'game_over': True, 'reason': 'Draw by agreement'})
 
     def test_prop_game_over_game_2(self):
         """When game is over due to resignation."""
