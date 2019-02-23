@@ -533,12 +533,51 @@ class GameTest(unittest.TestCase):
     def test_resign_in_ended(self):
         """Make a resignation in a game which is already ended (due to other reasons)."""
         self.test_game_1.resign()
-        self.assertEqual(self.test_game_1._resigned[WHITE], False)
+        self.assertEqual(self.test_game_1.resigned[WHITE], False)
 
     def test_resign_with_specified_side(self):
         """Make a resignation for the opposite side."""
         self.game_wpt.resign(side=BLACK)
         self.assertEqual(self.game_wpt.result, SCORES[WHITE])
+
+    # NOTE: 'offer_draw' function tests
+    def test_offer_draw_invalid_side(self):
+        """Offer a draw with an invalid side."""
+        self.assertRaises(ValueError, lambda: self.game_wpt.offer_draw(side='z'))
+
+    def test_offer_draw_default_side_white(self):
+        """Offer a draw without specifying a side (when it's white's turn)"""
+        self.game_wpt.offer_draw()
+        self.assertEqual(self.game_wpt.draw_offers[WHITE]['made'], True)
+
+    def test_offer_draw_default_side_black(self):
+        """Offer a draw without specifying a side (when it's black's turn)"""
+        self.game_wpt.move('e4')
+        self.game_wpt.offer_draw()
+        self.assertEqual(self.game_wpt.draw_offers[BLACK]['made'], True)
+
+    def test_offer_draw_in_ended(self):
+        """Offer a draw in a game which is already ended."""
+        self.test_game_1.offer_draw()
+        self.assertEqual(self.test_game_1.draw_offers[WHITE]['made'], False)
+
+    def test_offer_draw_already_made(self):
+        """Offer a draw in a game where the current side has already offered a draw."""
+        self.game_wpt.offer_draw()
+        self.game_wpt.offer_draw()
+        self.assertEqual(self.game_wpt.draw_offers[WHITE], {'made': True, 'accepted': False})
+
+    def test_offer_draw_when_opponent_has_offered(self):
+        """Offer a draw in a game where the opponent has already offered a draw."""
+        self.game_wpt.offer_draw()
+        self.game_wpt.move('e4')
+        self.game_wpt.offer_draw()
+        self.assertEqual(self.game_wpt.draw_offers[WHITE]['accepted'], True)
+
+    def test_offer_draw_specified_side(self):
+        """Offer a draw offer for the opposite side."""
+        self.game_wpt.offer_draw(side=BLACK)
+        self.assertEqual(self.game_wpt.draw_offers[BLACK]['made'], True)
 
     # NOTE: '_construct_move_description' function tests
     #   Most of the functionality for this function is actually tested in the 'history' property.
