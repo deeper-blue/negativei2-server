@@ -22,6 +22,11 @@ class Game:
         _plies:          The ply count (version number).
         _history:        The game move history.
         _resigned:       The resignation status for both sides.
+        _draw_offers:    The draw offer status for both sides.
+            MEANING:
+                _draw_offers[WHITE]['made']     represents whether white has made a draw offer or not.
+                _draw_offers[WHITE]['accepted'] represents whether white's draw offer had been accepted by black.
+                                                and vice-versa for black.
 
     Properties:
         The internal attributes listed above can be accessed through properties defined in this class.
@@ -55,6 +60,10 @@ class Game:
         self._plies = 0
         self._history = []
         self._resigned = {WHITE: False, BLACK: False}
+        self._draw_offers = {
+            WHITE: {'made': False, 'accepted': False},
+            BLACK: {'made': False, 'accepted': False}
+        }
 
     @property
     def id(self) -> int:
