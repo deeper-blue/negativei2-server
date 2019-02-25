@@ -51,7 +51,7 @@ class GameTest(unittest.TestCase):
         self.game_wp.add_player('2', side=BLACK)
 
         # Game with players and time controls
-        self.game_wpt = Game('1', time_controls=60)
+        self.game_wpt = Game('1', '1', time_controls=60)
         self.game_wpt.add_player('1', side=WHITE)
         self.game_wpt.add_player('2', side=BLACK)
 
@@ -780,3 +780,33 @@ class GameTest(unittest.TestCase):
             "1 ♖ ♘ ♗ . ♔ ♗ ♘ ♖\n"
             "  a b c d e f g h"
         ))
+
+    def test_from_dict_empty_dict(self):
+        """Generate a Game object from an empty dict."""
+        self.assertRaises(KeyError, lambda: Game.from_dict({}))
+
+    def test_from_dict_missing_keys(self):
+        """Generate a Game object with a dict missing some required keys."""
+        self.assertRaises(KeyError, lambda: Game.from_dict({
+            'id': None,
+            'players': None,
+            'time_controls': None
+        }))
+
+    def test_from_dict_preserves_pgn(self):
+        """Generate a Game object from a dict, and check that the PGN is preserved."""
+        expected = self.test_game_1.pgn
+        input_dict = self.test_game_1.to_dict()
+        self.assertEqual(expected, Game.from_dict(input_dict).pgn)
+
+    def test_from_dict_preserves_move_stack(self):
+        """Generate a Game object from a dict, and check that the move stack is preserved."""
+        expected = self.test_game_1.board.move_stack
+        input_dict = self.test_game_1.to_dict()
+        self.assertEqual(expected, Game.from_dict(input_dict).board.move_stack)
+
+    def test_from_dict_game_5(self):
+        """Generate a Game object from a dict representation of test game 5, and compare the two dicts."""
+        expected = self.test_game_5.to_dict()
+        input_dict = expected
+        self.assertEqual(expected, Game.from_dict(input_dict).to_dict())

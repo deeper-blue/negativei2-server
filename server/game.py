@@ -438,21 +438,6 @@ class Game:
         # Resign
         self._resigned[side] = True
 
-    @classmethod
-    def from_create_game_schema(cls, input_dict, game_id):
-        """Factory method to create a Game object from a dict validated by CreateGameInput.
-
-        Assumes that the input dictionary has already been validated against the schema.
-        """
-        g = cls(input_dict['creator_id'], game_id, int(input_dict['time_per_player']))
-        #TODO: below constants should be places somewhere unified
-        if input_dict['player1_id'] not in ['OPEN', 'AI']:
-            g.add_player(input_dict['player1_id'], 'w')
-        if input_dict['player2_id'] not in ['OPEN', 'AI']:
-            g.add_player(input_dict['player2_id'], 'b')
-
-        return g
-
     def offer_draw(self, side=None) -> None:
         """Offer a draw to the other side.
 
@@ -559,7 +544,58 @@ class Game:
 
         return "\n".join(ranks)
 
-    def as_dict(self) -> dict:
+    @classmethod
+    def from_create_game_schema(cls, input_dict, game_id):
+        """Factory method to create a Game object from a dict validated by CreateGameInput.
+
+        Assumes that the input dictionary has already been validated against the schema.
+        """
+        g = cls(input_dict['creator_id'], game_id, int(input_dict['time_per_player']))
+        #TODO: below constants should be places somewhere unified
+        if input_dict['player1_id'] not in ['OPEN', 'AI']:
+            g.add_player(input_dict['player1_id'], 'w')
+        if input_dict['player2_id'] not in ['OPEN', 'AI']:
+            g.add_player(input_dict['player2_id'], 'b')
+
+        return g
+
+    @classmethod
+    def from_dict(cls, input_dict):
+        required_keys = ['id', 'creator', 'players', 'time_controls', 'history', 'remaining_time', 'ply_count', 'resigned', 'draw_offers']
+        missing_keys = []
+
+        # Check for any missing keys
+        for key in required_keys:
+            if key not in input_dict:
+                missing_keys.append(key)
+
+        if missing_keys:
+            raise KeyError(f"Missing required attribute keys from 'input_dict': {missing_keys}")
+
+        # Create a new game object
+        game = Game(input_dict['creator'], input_dict['id'])
+
+        # Generate a new internal board (FEN)
+        game._board = chess.Board()
+
+        # Load in necessary attributes for starting the game
+        game._players = input_dict['players']
+        game._time_controls = input_dict['time_controls']
+
+        # Load in the played game moves, and replay them on the new internal board
+        for move in input_dict['history']:
+            game._history.append(move)
+            game._board.push_san(move['san'])
+
+        # Load in any remaining attributes from the input dictionary
+        game._remaining_time = input_dict['remaining_time']
+        game._plies = input_dict['ply_count']
+        game._resigned = input_dict['resigned']
+        game._draw_offers = input_dict['draw_offers']
+
+        return game
+
+    def to_dict(self) -> dict:
         """Generates a dictionary representation of the Game object, valid for flask.jsonify.
 
         Returns:

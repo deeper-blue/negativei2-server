@@ -62,7 +62,7 @@ def create_game():
     # create new doc ID
     doc_ref = db.collection(GAMES_COLLECTION).document()
     g = Game.from_create_game_schema(request.form, doc_ref.id)
-    doc_ref.create(g.as_dict())
+    doc_ref.create(g.to_dict())
     return get_game(doc_ref.id)
 
 @app.route('/controllerregister', methods=["POST"])
