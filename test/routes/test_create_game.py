@@ -2,8 +2,10 @@
 
 import json
 import unittest
+from unittest.mock import patch
 from server.server import app
 from server.game import WHITE, BLACK
+from .mock_firebase import MockClient
 
 OK          = 200
 BAD_REQUEST = 400
@@ -35,7 +37,8 @@ class CreateGameTest(unittest.TestCase):
                 "time_per_player": 60 * 60, # 1 hour per player
                 "board_id": 0}
 
-    def test_invalid_creator_id(self):
+    @patch('server.server.db', new_callable=MockClient)
+    def test_invalid_creator_id(self, mock_db):
         """An invalid creator ID should error"""
         params = self.create_dummy_params()
         params["creator_id"] = "definitelyinvalidID"
@@ -43,7 +46,8 @@ class CreateGameTest(unittest.TestCase):
         print(response)
         self.assertEqual(BAD_REQUEST, response.status_code)
 
-    def test_invalid_player_id(self):
+    @patch('server.server.db', new_callable=MockClient)
+    def test_invalid_player_id(self, mock_db):
         """An invalid player ID should error"""
         params = self.create_dummy_params()
         params["player1_id"] = "definitelyinvalidID"
@@ -51,7 +55,8 @@ class CreateGameTest(unittest.TestCase):
         print(response)
         self.assertEqual(BAD_REQUEST, response.status_code)
 
-    def test_negative_time_per_player(self):
+    @patch('server.server.db', new_callable=MockClient)
+    def test_negative_time_per_player(self, mock_db):
         """Having negative time_per_player should error"""
         params = self.create_dummy_params()
         params["time_per_player"] = -500
@@ -59,7 +64,8 @@ class CreateGameTest(unittest.TestCase):
         print(response)
         self.assertEqual(BAD_REQUEST, response.status_code)
 
-    def test_create_two_games_same_board_id(self):
+    @patch('server.server.db', new_callable=MockClient)
+    def test_create_two_games_same_board_id(self, mock_db):
         """Creating two games that both use the same board_id should error
            Each board can only host 1 game at a time
         """
@@ -70,8 +76,8 @@ class CreateGameTest(unittest.TestCase):
         response = self.post(params)
         self.assertEqual(BAD_REQUEST, response.status_code)
 
-    # Test game object expected values
-    def test_create_game_object_sensible(self):
+    @patch('server.server.db', new_callable=MockClient)
+    def test_create_game_object_sensible(self, mock_db):
         """The fields in the returned object have some values
            that need to be there.
         """
@@ -96,8 +102,8 @@ class CreateGameTest(unittest.TestCase):
         # check history
         self.asserListEqual([], json_game["history"])
 
-    # Test that game object exists after creating it
-    def test_create_then_get_game(self):
+    @patch('server.server.db', new_callable=MockClient)
+    def test_create_then_get_game(self, mock_db):
         """Creating a game then getting the same game_id should return
            the same object.
         """

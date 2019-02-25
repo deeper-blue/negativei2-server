@@ -19,7 +19,13 @@ ACCOUNT_JSON_FILENAME = "firebase_account_cred.json"
 with open(ACCOUNT_JSON_FILENAME, 'w') as account_file:
     account_file.write(raw_account)
 
-db = firestore.Client("assistive-chess-robot")
+# Initialising this on Travis breaks the test suite
+if os.environ.get("CI", None) != "true":
+    db = firestore.Client("assistive-chess-robot")
+else:
+    # reassigned by a mock object
+    db = None
+
 GAMES_COLLECTION = "games"
 
 BAD_REQUEST = 400
