@@ -142,6 +142,15 @@ class GameTest(unittest.TestCase):
     def test_initial_property_free_slots(self):
         self.assertEqual(self.game.free_slots, 2)
 
+    def test_initial_property_resigned(self):
+        self.assertEqual(self.game.resigned, {WHITE: False, BLACK: False})
+
+    def test_initial_property_draw_offers(self):
+        self.assertEqual(self.game.draw_offers, {
+            WHITE: {'made': False, 'accepted': False},
+            BLACK: {'made': False, 'accepted': False}
+        })
+
     def test_initial_property_result(self):
         self.assertEqual(self.game.result, '*')
 
@@ -365,6 +374,12 @@ class GameTest(unittest.TestCase):
             self.game_wpt.move(move)
         self.assertEqual(self.game_wpt.result, SCORES['draw'])
 
+    def test_prop_result_draw_agreement(self):
+        """When a game ends due to draw agreement."""
+        self.game_wpt.offer_draw()
+        self.game_wpt.accept_draw(side=BLACK)
+        self.assertEqual(self.game_wpt.result, SCORES['draw'])
+
     # NOTE: 'in_progress' property
     def test_prop_in_progress_when_in_progress(self):
         """When game is in progress."""
@@ -388,6 +403,12 @@ class GameTest(unittest.TestCase):
         for move in ['Nc3', 'Nc6', 'Nb1', 'Nb8', 'Nc3', 'Nc6', 'Nb1']:
             self.game_wpt.move(move)
         self.assertEqual(self.game_wpt.game_over, {'game_over': True, 'reason': 'Three-fold repetition'})
+
+    def test_prop_game_over_draw_agreement(self):
+        """When game is over due to draw agreement."""
+        self.game_wpt.offer_draw()
+        self.game_wpt.accept_draw(side=BLACK)
+        self.assertEqual(self.game_wpt.game_over, {'game_over': True, 'reason': 'Draw by agreement'})
 
     def test_prop_game_over_game_2(self):
         """When game is over due to resignation."""
@@ -449,6 +470,13 @@ class GameTest(unittest.TestCase):
     def test_move_with_invalid_san(self):
         """Make a move (with invalid SAN in the current context)."""
         self.assertRaises(ValueError, lambda: self.game_wpt.move('e6'))
+
+    def test_move_clears_draw_offers(self):
+        """Make a move, and check if draw offers are cleared."""
+        self.game_wpt.offer_draw()
+        self.assertEqual(self.game_wpt.draw_offers[WHITE]['made'], True)
+        self.game_wpt.move('e4')
+        self.assertEqual(self.game_wpt.draw_offers[WHITE]['made'], False)
 
     def test_move_increments_ply_count(self):
         """Making a move increments the ply count."""
@@ -521,12 +549,150 @@ class GameTest(unittest.TestCase):
     def test_resign_in_ended(self):
         """Make a resignation in a game which is already ended (due to other reasons)."""
         self.test_game_1.resign()
-        self.assertEqual(self.test_game_1._resigned[WHITE], False)
+        self.assertEqual(self.test_game_1.resigned[WHITE], False)
 
     def test_resign_with_specified_side(self):
         """Make a resignation for the opposite side."""
         self.game_wpt.resign(side=BLACK)
         self.assertEqual(self.game_wpt.result, SCORES[WHITE])
+
+    # NOTE: 'offer_draw' function tests
+    def test_offer_draw_invalid_side(self):
+        """Offer a draw with an invalid side."""
+        self.assertRaises(ValueError, lambda: self.game_wpt.offer_draw(side='z'))
+
+    def test_offer_draw_default_side_white(self):
+        """Offer a draw without specifying a side (when it's white's turn)"""
+        self.game_wpt.offer_draw()
+        self.assertEqual(self.game_wpt.draw_offers[WHITE]['made'], True)
+
+    def test_offer_draw_default_side_black(self):
+        """Offer a draw without specifying a side (when it's black's turn)"""
+        self.game_wpt.move('e4')
+        self.game_wpt.offer_draw()
+        self.assertEqual(self.game_wpt.draw_offers[BLACK]['made'], True)
+
+    def test_offer_draw_in_ended(self):
+        """Offer a draw in a game which is already ended."""
+        self.test_game_1.offer_draw()
+        self.assertEqual(self.test_game_1.draw_offers[WHITE]['made'], False)
+
+    def test_offer_draw_already_made(self):
+        """Offer a draw in a game where the current side has already offered a draw."""
+        self.game_wpt.offer_draw()
+        self.game_wpt.offer_draw()
+        self.assertEqual(self.game_wpt.draw_offers[WHITE], {'made': True, 'accepted': False})
+
+    def test_offer_draw_when_opponent_has_offered(self):
+        """Offer a draw in a game where the opponent has already offered a draw."""
+        self.game_wpt.offer_draw()
+        self.game_wpt.offer_draw(side=BLACK)
+        self.assertEqual(self.game_wpt.draw_offers[WHITE]['accepted'], True)
+
+    def test_offer_draw_specified_side(self):
+        """Offer a draw offer for the opposite side."""
+        self.game_wpt.offer_draw(side=BLACK)
+        self.assertEqual(self.game_wpt.draw_offers[BLACK]['made'], True)
+
+    # NOTE: 'accept_draw' function tests
+    def test_accept_draw_invalid_side(self):
+        """Accept a draw with an invalid side."""
+        self.game_wpt.offer_draw()
+        self.assertRaises(ValueError, lambda: self.game_wpt.accept_draw(side='z'))
+
+    def test_accept_draw_default_side_white(self):
+        """Accept a draw without specifying a side (when it's white's turn)"""
+        self.game_wpt.offer_draw(side=BLACK)
+        self.game_wpt.accept_draw()
+        self.assertEqual(self.game_wpt.draw_offers[BLACK]['accepted'], True)
+
+    def test_accept_draw_default_side_black(self):
+        """Accept a draw without specifying a side (when it's black's turn)"""
+        self.game_wpt.move('e4')
+        self.game_wpt.offer_draw(side=WHITE)
+        self.game_wpt.accept_draw()
+        self.assertEqual(self.game_wpt.draw_offers[WHITE]['accepted'], True)
+
+    def test_accept_draw_in_ended(self):
+        """Accept a draw in a game which is already ended."""
+        self.game_wpt.offer_draw()
+        self.game_wpt.resign(side=BLACK)
+        self.game_wpt.accept_draw(side=BLACK)
+        self.assertEqual(self.game_wpt.draw_offers, {
+            WHITE: {'made': True, 'accepted': False},
+            BLACK: {'made': False, 'accepted': False}
+        })
+
+    def test_accept_draw_without_offer(self):
+        """Accept a draw in a game where the opponent hasn't offered a draw."""
+        self.game_wpt.accept_draw()
+        self.assertEqual(self.game_wpt.draw_offers, {
+            WHITE: {'made': False, 'accepted': False},
+            BLACK: {'made': False, 'accepted': False}
+        })
+
+    def test_accept_draw_specified_side(self):
+        """Accept a draw offer for the opposite side."""
+        self.game_wpt.offer_draw()
+        self.game_wpt.accept_draw(side=BLACK)
+        self.assertEqual(self.game_wpt.draw_offers, {
+            WHITE: {'made': True, 'accepted': True},
+            BLACK: {'made': False, 'accepted': False}
+        })
+
+    # NOTE: 'decline_draw' function tests
+    def test_decline_draw_invalid_side(self):
+        """Decline a draw with an invalid side."""
+        self.game_wpt.offer_draw()
+        self.assertRaises(ValueError, lambda: self.game_wpt.decline_draw(side='z'))
+
+    def test_decline_draw_default_side_white(self):
+        """Decline a draw without specifying a side (when it's white's turn)"""
+        self.game_wpt.move('e4')
+        self.game_wpt.offer_draw()
+        self.game_wpt.move('e5')
+        self.game_wpt.decline_draw()
+        self.assertEqual(self.game_wpt.draw_offers, {
+            WHITE: {'made': False, 'accepted': False},
+            BLACK: {'made': False, 'accepted': False}
+        })
+
+    def test_decline_draw_default_side_black(self):
+        """Decline a draw without specifying a side (when it's black's turn)"""
+        self.game_wpt.offer_draw()
+        self.game_wpt.move('e4')
+        self.game_wpt.decline_draw()
+        self.assertEqual(self.game_wpt.draw_offers, {
+            WHITE: {'made': False, 'accepted': False},
+            BLACK: {'made': False, 'accepted': False}
+        })
+
+    def test_decline_draw_in_ended(self):
+        """Decline a draw in a game which is already ended."""
+        self.game_wpt.offer_draw()
+        self.game_wpt.resign(side=BLACK)
+        self.game_wpt.decline_draw(side=BLACK)
+        self.assertEqual(self.game_wpt.draw_offers, {
+            WHITE: {'made': True, 'accepted': False},
+            BLACK: {'made': False, 'accepted': False}
+        })
+
+    def test_decline_draw_without_offer(self):
+        """Decline a draw in a game where the opponent hasn't offered a draw."""
+        self.game_wpt.decline_draw()
+        self.assertEqual(self.game_wpt.draw_offers, {
+            WHITE: {'made': False, 'accepted': False},
+            BLACK: {'made': False, 'accepted': False}
+        })
+
+    def test_decline_draw_specified_side(self):
+        """Decline a draw offer for the opposite side."""
+        self.game_wpt.offer_draw()
+        self.game_wpt.accept_draw(side=BLACK)
+        self.assertEqual(self.game_wpt.draw_offers, {
+            WHITE: {'made': True, 'accepted': True},
+            BLACK: {'made': False, 'accepted': False}
+        })
 
     # NOTE: '_construct_move_description' function tests
     #   Most of the functionality for this function is actually tested in the 'history' property.

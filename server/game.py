@@ -22,6 +22,11 @@ class Game:
         _plies:          The ply count (version number).
         _history:        The game move history.
         _resigned:       The resignation status for both sides.
+        _draw_offers:    The draw offer status for both sides.
+            MEANING:
+                _draw_offers[WHITE]['made']     represents whether white has made a draw offer or not.
+                _draw_offers[WHITE]['accepted'] represents whether white's draw offer had been accepted by black.
+                                                and vice-versa for black.
 
     Properties:
         The internal attributes listed above can be accessed through properties defined in this class.
@@ -62,6 +67,10 @@ class Game:
         self._plies = 0
         self._history = []
         self._resigned = {WHITE: False, BLACK: False}
+        self._draw_offers = {
+            WHITE: {'made': False, 'accepted': False},
+            BLACK: {'made': False, 'accepted': False}
+        }
 
     @property
     def id(self) -> str:
@@ -133,6 +142,16 @@ class Game:
         return sum([1 if player is None else 0 for player in self.players.values()])
 
     @property
+    def resigned(self) -> dict:
+        """The resignation status for both sides."""
+        return self._resigned
+
+    @property
+    def draw_offers(self) -> dict:
+        """The draw offer status for both sides."""
+        return self._draw_offers
+
+    @property
     def result(self) -> str:
         """The game result (1-0, 0-1, 1/2-1/2, or * if the game is in progress).
 
@@ -150,6 +169,10 @@ class Game:
         # Override result to white win if black resigns
         if self._resigned[BLACK]:
             result = SCORES[WHITE]
+
+        # Override result to draw if either side accepts a draw
+        if self._draw_offers[WHITE]['accepted'] or self._draw_offers[BLACK]['accepted']:
+            result = SCORES['draw']
 
         # Override result to black win if white has no time
         if self._remaining_time[WHITE] == 0:
@@ -196,6 +219,10 @@ class Game:
         # Check for resignation
         if self._resigned[WHITE] or self._resigned[BLACK]:
             return {'game_over': True, 'reason': 'Resignation'}
+
+        # Check for accepted draw offers
+        if self._draw_offers[WHITE]['accepted'] or self._draw_offers[BLACK]['accepted']:
+            return {'game_over': True, 'reason': 'Draw by agreement'}
 
         # Time as a game-over reason should take more priority over the other reasons
         if (self._remaining_time[WHITE] == 0) or (self._remaining_time[BLACK] == 0):
@@ -310,6 +337,10 @@ class Game:
         # Increment ply count after move is successfully made
         self._plies += 1
 
+        # Clear any draw offers made by either player
+        for side in (WHITE, BLACK):
+            self.decline_draw(side=side)
+
         # Construct the extended move description (adding a SAN field)
         # HACK: For logical purposes, it makes most sense for the SAN notation of the move
         #   to be at the start of the detailed move dict (despite dicts not actually being ordered)
@@ -421,6 +452,86 @@ class Game:
 
         return g
 
+    def offer_draw(self, side=None) -> None:
+        """Offer a draw to the other side.
+
+        Arguments:
+            side: The side offering the draw.
+        """
+
+        # If no side argument given, then assume it's the current side to play
+        side = side if side is not None else self.turn
+
+        if side not in (WHITE, BLACK):
+            raise ValueError(f"Invalid side '{side}': expected one of ('w', 'b').")
+
+        # Don't allow draw offering if the game is not in progress
+        if not self.in_progress:
+            return
+
+        # If draw offer is already made, don't do anything
+        if self._draw_offers[side]['made']:
+            return
+
+        # If the opponent has offered a draw, accept it
+        if self._draw_offers[self._invert(side)]['made']:
+            self.accept_draw(side=side)
+
+        # Offer the draw
+        self._draw_offers[side]['made'] = True
+
+    def accept_draw(self, side=None) -> None:
+        """Accept a draw offer made by the other side.
+
+        Arguments:
+            side: The side accepting the draw.
+        """
+
+        # If no side argument given, then assume it's the current side to play
+        side = side if side is not None else self.turn
+
+        if side not in (WHITE, BLACK):
+            raise ValueError(f"Invalid side '{side}': expected one of ('w', 'b').")
+
+        # Don't allow draw accepting if the game is not in progress
+        if not self.in_progress:
+            return
+
+        # Don't allow draw accepting if the opposite side hasn't made a draw offer
+        if not self._draw_offers[self._invert(side)]['made']:
+            return
+
+        # Accept the draw made by the other side
+        self._draw_offers[self._invert(side)]['accepted'] = True
+
+    def decline_draw(self, side=None) -> None:
+        """Decline a draw offer made by the other side.
+
+        Arguments:
+            side: The side accepting the draw.
+        """
+
+        # If no side argument given, then assume it's the current side to play
+        side = side if side is not None else self.turn
+
+        if side not in (WHITE, BLACK):
+            raise ValueError(f"Invalid side '{side}': expected one of ('w', 'b').")
+
+        # Don't allow draw declining if the game is not in progress
+        if not self.in_progress:
+            return
+
+        # Don't allow draw declining if the opposite side hasn't made a draw offer
+        if not self._draw_offers[self._invert(side)]['made']:
+            return
+
+        # Don't allow draw declining if the offer was already accepted
+        if self._draw_offers[self._invert(side)]['accepted']:
+            return
+
+        # Decline the draw made by the other side (Reset 'made' so that future draws can be offered again)
+        self._draw_offers[self._invert(side)]['made'] = False
+
     def __str__(self) -> str:
         """String representation of the current board state.
 
@@ -461,6 +572,8 @@ class Game:
             'free_slots':     self.free_slots,
             'time_controls':  self.time_controls,
             'remaining_time': self.remaining_time,
+            'resigned':       self.resigned,
+            'draw_offers':    self.draw_offers,
             'in_progress':    self.in_progress,
             'result':         self.result,
             'game_over':      self.game_over,
