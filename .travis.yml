@@ -3,6 +3,7 @@ python:
     - "3.6"
 before_install:
     - export PYTHONPATH=$PYTHONPATH:$(pwd)
+    - export FIREBASE_SERVICE_ACCOUNT_JSON="sometext"
 install:
     - pip install -r requirements.txt
 script:

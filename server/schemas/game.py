@@ -1,5 +1,9 @@
 from marshmallow import Schema, fields, validates, ValidationError
 
+OPEN_SLOT = "OPEN"
+AI = "AI"
+USER_COLLECTION = "users"
+
 class MakeMoveInput(Schema):
     # This will come from Firebase
     user_id = fields.String(required=True)
@@ -26,7 +30,27 @@ class CreateGameInput(Schema):
     # ID of the robot/board to play on. Reserved for future use
     board_id = fields.String(required=True)
 
+    def __init__(self, db):
+        super().__init__()
+        self.db = db
+
     @validates('time_per_player')
     def validate_time(self, value):
         if value < 0:
             raise ValidationError('Cannot have negative time')
+
+    @validates('player1_id')
+    @validates('player2_id')
+    def player_valid(self, value):
+        if value == OPEN_SLOT or value == AI:
+            return
+
+        user_ref = self.db.collection(USER_COLLECTION).document(value).get()
+        if not user_ref.exists:
+            raise ValidationError(f'User {value} doesn\'t exist!')
+
+    @validates('creator_id')
+    def creator_exists(self, value):
+        user_ref = self.db.collection(USER_COLLECTION).document(value).get()
+        if not user_ref.exists:
+            raise ValidationError('Creator doesn\'t exist!')

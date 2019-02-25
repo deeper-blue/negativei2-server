@@ -37,21 +37,21 @@ class GameTest(unittest.TestCase):
 
     def setUp(self):
         # Game with no players or time controls
-        self.game = Game(1)
+        self.game = Game('1')
 
         # Game with time controls
-        self.game_wt = Game(1, time_controls=60)
+        self.game_wt = Game('1', time_controls=60)
 
         # Finished game (zero time)
-        self.game_ft = Game(1, time_controls=0)
+        self.game_ft = Game('1', time_controls=0)
 
         # Game with players (and no time controls)
-        self.game_wp = Game(1)
+        self.game_wp = Game('1')
         self.game_wp.add_player('1', side=WHITE)
         self.game_wp.add_player('2', side=BLACK)
 
         # Game with players and time controls
-        self.game_wpt = Game(1, time_controls=60)
+        self.game_wpt = Game('1', time_controls=60)
         self.game_wpt.add_player('1', side=WHITE)
         self.game_wpt.add_player('2', side=BLACK)
 
@@ -89,15 +89,15 @@ class GameTest(unittest.TestCase):
     # NOTE: __init__ tests
     def test_init_invalid_id(self):
         """Invalid ID type."""
-        self.assertRaises(TypeError, lambda: Game('1'))
+        self.assertRaises(TypeError, lambda: Game(1))
 
     def test_init_invalid_time_control_type(self):
         """Invalid time control type."""
-        self.assertRaises(TypeError, lambda: Game(1, time_controls='60'))
+        self.assertRaises(TypeError, lambda: Game('1', time_controls='60'))
 
     def test_init_invalid_time_control_value(self):
         """Invalid time control value (negative int)."""
-        self.assertRaises(ValueError, lambda: Game(1, time_controls=-60))
+        self.assertRaises(ValueError, lambda: Game('1', time_controls=-60))
 
     def test_init_zero_time_control_result(self):
         """Time controls set to 0 (Each side has no time)."""
@@ -105,9 +105,6 @@ class GameTest(unittest.TestCase):
         self.assertEqual(self.game_ft.in_progress, False)
 
     # NOTE: Property initial value tests
-    def test_initial_property_id(self):
-        self.assertEqual(self.game.id, 1)
-
     def test_initial_property_board(self):
         self.assertEqual(self.game.board, chess.Board())
 
