@@ -4,6 +4,7 @@ import logging
 from flask import Flask, request, abort, jsonify
 from schemas.game import MakeMoveInput, CreateGameInput
 from schemas.controller import ControllerRegisterInput
+from .game import Game
 import google.cloud
 from google.cloud import firestore
 
@@ -56,7 +57,11 @@ def create_game():
     errors = CreateGameInput(db).validate(request.form)
     if errors:
         abort(BAD_REQUEST, str(errors))
-    return get_game(0)
+    # create new doc ID
+    doc_ref = db.collection(GAMES_COLLECTION).document()
+    g = Game.from_create_game_schema(request.form, doc_ref.id)
+    doc_ref.create(g.as_dict())
+    return get_game(doc_ref.id)
 
 @app.route('/controllerregister', methods=["POST"])
 def register_controller():

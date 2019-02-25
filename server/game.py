@@ -33,11 +33,18 @@ class Game:
         methods provided in the class. Each of these instance methods has their own docstring description.
     """
 
-    def __init__(self, id_, time_controls=None):
-        if isinstance(id_, str):
-            self._id = id_
+    def __init__(self, creator_id, game_id=None, time_controls=None):
+        if isinstance(creator_id, str):
+            self._creator = creator_id
         else:
-            raise TypeError(f"Expected '_id' argument to be a str, got: {type(id_)}.")
+            raise TypeError(f"Expected 'creator_id' to be a string, got: {type(creator_id)}.")
+
+        if isinstance(game_id, str):
+            self._id = game_id
+        elif game_id is None:
+            self._id = game_id
+        else:
+            raise TypeError(f"Expected 'game_id' argument to be a str (or None), got: {type(game_id)}.")
 
         if isinstance(time_controls, int):
             if time_controls < 0:
@@ -58,8 +65,13 @@ class Game:
 
     @property
     def id(self) -> str:
-        """The game ID representing the Game object."""
+        """The game ID"""
         return self._id
+
+    @property
+    def creator(self) -> str:
+        """The creator's ID"""
+        return self._creator
 
     @property
     def board(self) -> chess.Board:
@@ -394,6 +406,21 @@ class Game:
         # Resign
         self._resigned[side] = True
 
+    @classmethod
+    def from_create_game_schema(cls, input_dict, game_id):
+        """Factory method to create a Game object from a dict validated by CreateGameInput.
+
+        Assumes that the input dictionary has already been validated against the schema.
+        """
+        g = cls(input_dict['creator_id'], game_id, int(input_dict['time_per_player']))
+        #TODO: below constants should be places somewhere unified
+        if input_dict['player1_id'] not in ['OPEN', 'AI']:
+            g.add_player(input_dict['player1_id'], 'w')
+        if input_dict['player2_id'] not in ['OPEN', 'AI']:
+            g.add_player(input_dict['player2_id'], 'b')
+
+        return g
+
     def __str__(self) -> str:
         """String representation of the current board state.
 
@@ -429,6 +456,7 @@ class Game:
 
         return {
             'id':             self.id,
+            'creator':        self.creator,
             'players':        self.players,
             'free_slots':     self.free_slots,
             'time_controls':  self.time_controls,

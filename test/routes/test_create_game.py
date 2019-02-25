@@ -37,6 +37,10 @@ class CreateGameTest(unittest.TestCase):
                 "time_per_player": 60 * 60, # 1 hour per player
                 "board_id": 0}
 
+    def set_up_mock_db(self, mock_db):
+        """Creates some entries in the mock database"""
+        mock_db.collection("users").add({}, document_id="some_creator")
+
     @patch('server.server.db', new_callable=MockClient)
     def test_invalid_creator_id(self, mock_db):
         """An invalid creator ID should error"""
@@ -81,6 +85,7 @@ class CreateGameTest(unittest.TestCase):
         """The fields in the returned object have some values
            that need to be there.
         """
+        self.set_up_mock_db(mock_db)
         params = self.create_dummy_params()
         response = self.post(params)
         json_game = json.loads(response.data)
@@ -93,26 +98,29 @@ class CreateGameTest(unittest.TestCase):
 
         # check in progress
         self.assertTrue(json_game["in_progress"])
-        self.assertFalse(json_game["game_over"])
+        self.assertFalse(json_game["game_over"]["game_over"])
 
         # check move count
-        self.assertEqual(0, json_game["move_count"])
+        self.assertEqual(1, json_game["move_count"])
         self.assertEqual(0, json_game["ply_count"])
 
         # check history
-        self.asserListEqual([], json_game["history"])
+        self.assertListEqual([], json_game["history"])
 
     @patch('server.server.db', new_callable=MockClient)
     def test_create_then_get_game(self, mock_db):
         """Creating a game then getting the same game_id should return
            the same object.
         """
+        self.set_up_mock_db(mock_db)
         params = self.create_dummy_params()
         response = self.post(params)
         self.assertEqual(OK, response.status_code)
         json_game = json.loads(response.data)
-        game_id = json_game["game_id"]
-        get_game_respone = self.client.get(f"/getgame/{game_id}")
+        game_id = json_game["id"]
+        print(f"json_game: {json_game}")
+        print(f"Game ID: {game_id}")
+        get_game_response = self.client.get(f"/getgame/{game_id}")
         self.assertEqual(OK, get_game_response.status_code)
         json_get_game = json.loads(get_game_response.data)
         self.assertDictEqual(json_get_game, json_game)
