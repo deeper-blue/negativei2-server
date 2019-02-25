@@ -7,3 +7,4 @@ Werkzeug==0.14.1
 marshmallow==2.18.0
 python-chess==0.25.1
 gunicorn==19.9.0
+flask-cors==3.0.7
