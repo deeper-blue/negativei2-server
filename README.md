@@ -43,7 +43,11 @@ $ . venv/bin/activate
 (venv) $ pip install -r requirements.txt
 ```
 
-The tests are all found in `/tests` and can be run with `pytest`.
+To run the application or to test it, you need to define the following environment variables:
+ - `FIREBASE_SERVICE_ACCOUNT_JSON` This contains the contents of the private key JSON that you download after setting up a service account. https://firebase.google.com/docs/admin/setup
+ - `GOOGLE_APPLICATION_CREDENTIALS` This is the location of the file that we write out the contents of `FIREBASE_SERVICE_ACCOUNT_JSON` to, currently this should be set to `firebase_account_cred.json`.
+
+The tests are all found in `/tests` and can be run with `pytest`. The tests expect that the environment variable `CI=true` is present.
 
 Run the following to start the application.
 
