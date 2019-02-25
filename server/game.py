@@ -15,6 +15,7 @@ class Game:
 
     Internal attributes (Do not modify or access directly):
         _id:             The assigned ID of the Game object (not the Python-assigned one).
+        _creator:        The ID of the user that created the game.
         _time_controls:  The time controls for the game (starting time for each side) in seconds.
         _remaining_time: The remaining time for both sides.
         _board:          The internal board object for the game.
@@ -38,11 +39,18 @@ class Game:
         methods provided in the class. Each of these instance methods has their own docstring description.
     """
 
-    def __init__(self, id_, time_controls=None):
-        if isinstance(id_, int):
-            self._id = id_
+    def __init__(self, creator_id, game_id=None, time_controls=None):
+        if isinstance(creator_id, str):
+            self._creator = creator_id
         else:
-            raise TypeError(f"Expected '_id' argument to be an int, got: {type(id_)}.")
+            raise TypeError(f"Expected 'creator_id' to be a string, got: {type(creator_id)}.")
+
+        if isinstance(game_id, str):
+            self._id = game_id
+        elif game_id is None:
+            self._id = game_id
+        else:
+            raise TypeError(f"Expected 'game_id' argument to be a str (or None), got: {type(game_id)}.")
 
         if isinstance(time_controls, int):
             if time_controls < 0:
@@ -66,9 +74,14 @@ class Game:
         }
 
     @property
-    def id(self) -> int:
-        """The game ID representing the Game object."""
+    def id(self) -> str:
+        """The game ID"""
         return self._id
+
+    @property
+    def creator(self) -> str:
+        """The creator's ID"""
+        return self._creator
 
     @property
     def board(self) -> chess.Board:
@@ -531,35 +544,24 @@ class Game:
 
         return "\n".join(ranks)
 
-    def to_dict(self) -> dict:
-        """Generates a dictionary representation of the Game object, valid for flask.jsonify.
+    @classmethod
+    def from_create_game_schema(cls, input_dict, game_id):
+        """Factory method to create a Game object from a dict validated by CreateGameInput.
 
-        Returns:
-            Dictionary representation of the Game object.
+        Assumes that the input dictionary has already been validated against the schema.
         """
+        g = cls(input_dict['creator_id'], game_id, int(input_dict['time_per_player']))
+        #TODO: below constants should be places somewhere unified
+        if input_dict['player1_id'] not in ['OPEN', 'AI']:
+            g.add_player(input_dict['player1_id'], 'w')
+        if input_dict['player2_id'] not in ['OPEN', 'AI']:
+            g.add_player(input_dict['player2_id'], 'b')
 
-        return {
-            'id':             self.id,
-            'players':        self.players,
-            'free_slots':     self.free_slots,
-            'time_controls':  self.time_controls,
-            'remaining_time': self.remaining_time,
-            'resigned':       self.resigned,
-            'draw_offers':    self.draw_offers,
-            'in_progress':    self.in_progress,
-            'result':         self.result,
-            'game_over':      self.game_over,
-            'turn':           self.turn,
-            'ply_count':      self.ply_count,
-            'move_count':     self.move_count,
-            'pgn':            self.pgn,
-            'history':        self.history,
-            'fen':            self.fen
-        }
+        return g
 
     @classmethod
     def from_dict(cls, input_dict):
-        required_keys = ['id', 'players', 'time_controls', 'history', 'remaining_time', 'ply_count']
+        required_keys = ['id', 'creator', 'players', 'time_controls', 'history', 'remaining_time', 'ply_count', 'resigned', 'draw_offers']
         missing_keys = []
 
         # Check for any missing keys
@@ -571,7 +573,7 @@ class Game:
             raise KeyError(f"Missing required attribute keys from 'input_dict': {missing_keys}")
 
         # Create a new game object
-        game = Game(input_dict['id'])
+        game = Game(input_dict['creator'], input_dict['id'])
 
         # Generate a new internal board (FEN)
         game._board = chess.Board()
@@ -588,11 +590,34 @@ class Game:
         # Load in any remaining attributes from the input dictionary
         game._remaining_time = input_dict['remaining_time']
         game._plies = input_dict['ply_count']
-
-        # TODO: Uncomment the below two lines (and remove this comment) once PR #13 has been merged
-        # https://github.com/notexactlyawe/negativei2-server/pull/13
-
-        # game._resigned = input_dict['resigned']
-        # game._draw_offers = input_dict['draw_offers']
+        game._resigned = input_dict['resigned']
+        game._draw_offers = input_dict['draw_offers']
 
         return game
+
+    def to_dict(self) -> dict:
+        """Generates a dictionary representation of the Game object, valid for flask.jsonify.
+
+        Returns:
+            Dictionary representation of the Game object.
+        """
+
+        return {
+            'id':             self.id,
+            'creator':        self.creator,
+            'players':        self.players,
+            'free_slots':     self.free_slots,
+            'time_controls':  self.time_controls,
+            'remaining_time': self.remaining_time,
+            'resigned':       self.resigned,
+            'draw_offers':    self.draw_offers,
+            'in_progress':    self.in_progress,
+            'result':         self.result,
+            'game_over':      self.game_over,
+            'turn':           self.turn,
+            'ply_count':      self.ply_count,
+            'move_count':     self.move_count,
+            'pgn':            self.pgn,
+            'history':        self.history,
+            'fen':            self.fen
+        }
