@@ -420,7 +420,7 @@ class Game:
 
         return "\n".join(ranks)
 
-    def as_dict(self) -> dict:
+    def to_dict(self) -> dict:
         """Generates a dictionary representation of the Game object, valid for flask.jsonify.
 
         Returns:
