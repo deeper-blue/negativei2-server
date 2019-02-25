@@ -2,6 +2,7 @@
 
 import json
 import unittest
+import pytest
 from unittest.mock import patch
 from server.server import app
 from server.game import WHITE, BLACK
@@ -44,6 +45,7 @@ class CreateGameTest(unittest.TestCase):
     @patch('server.server.db', new_callable=MockClient)
     def test_invalid_creator_id(self, mock_db):
         """An invalid creator ID should error"""
+        self.set_up_mock_db(mock_db)
         params = self.create_dummy_params()
         params["creator_id"] = "definitelyinvalidID"
         response = self.post(params)
@@ -53,6 +55,7 @@ class CreateGameTest(unittest.TestCase):
     @patch('server.server.db', new_callable=MockClient)
     def test_invalid_player_id(self, mock_db):
         """An invalid player ID should error"""
+        self.set_up_mock_db(mock_db)
         params = self.create_dummy_params()
         params["player1_id"] = "definitelyinvalidID"
         response = self.post(params)
@@ -62,17 +65,20 @@ class CreateGameTest(unittest.TestCase):
     @patch('server.server.db', new_callable=MockClient)
     def test_negative_time_per_player(self, mock_db):
         """Having negative time_per_player should error"""
+        self.set_up_mock_db(mock_db)
         params = self.create_dummy_params()
         params["time_per_player"] = -500
         response = self.post(params)
         print(response)
         self.assertEqual(BAD_REQUEST, response.status_code)
 
+    @pytest.mark.xfail
     @patch('server.server.db', new_callable=MockClient)
     def test_create_two_games_same_board_id(self, mock_db):
         """Creating two games that both use the same board_id should error
            Each board can only host 1 game at a time
         """
+        self.set_up_mock_db(mock_db)
         params = self.create_dummy_params()
         response = self.post(params)
         self.assertEqual(OK, response.status_code)
