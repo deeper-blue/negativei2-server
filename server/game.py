@@ -443,3 +443,43 @@ class Game:
             'history':        self.history,
             'fen':            self.fen
         }
+
+    @classmethod
+    def from_dict(cls, input_dict):
+        required_keys = ['players', 'time_controls', 'history', 'remaining_time', 'ply_count']
+        missing_keys = []
+
+        # Check for any missing keys
+        for key in required_keys:
+            if key not in input_dict:
+                missing_keys.append(key)
+
+        if missing_keys:
+            raise KeyError(f"Missing required attribute keys from 'input_dict': {missing_keys}")
+
+        # Create a new game object
+        game = Game()
+
+        # Generate a new internal board (FEN)
+        game._board = chess.Board()
+
+        # Load in necessary attributes for starting the game
+        game._players = input_dict['players']
+        game._time_controls = input_dict['time_controls']
+
+        # Load in the played game moves, and replay them on the new internal board
+        for move in input_dict['history']:
+            game._history.append(move)
+            game._board.push_san(move['san'])
+
+        # Load in any remaining attributes from the input dictionary
+        game._remaining_time = input_dict['remaining_time']
+        game._plies = input_dict['ply_count']
+
+        # TODO: Uncomment the below two lines (and remove this comment) once PR #13 has been merged
+        # https://github.com/notexactlyawe/negativei2-server/pull/13
+
+        # game._resigned = input_dict['resigned']
+        # game._draw_offers = input_dict['draw_offers']
+
+        return game
