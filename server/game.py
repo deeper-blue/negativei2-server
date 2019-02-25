@@ -446,7 +446,7 @@ class Game:
 
     @classmethod
     def from_dict(cls, input_dict):
-        required_keys = ['players', 'time_controls', 'history', 'remaining_time', 'ply_count']
+        required_keys = ['id', 'players', 'time_controls', 'history', 'remaining_time', 'ply_count']
         missing_keys = []
 
         # Check for any missing keys
@@ -458,7 +458,7 @@ class Game:
             raise KeyError(f"Missing required attribute keys from 'input_dict': {missing_keys}")
 
         # Create a new game object
-        game = Game()
+        game = Game(input_dict['id'])
 
         # Generate a new internal board (FEN)
         game._board = chess.Board()
