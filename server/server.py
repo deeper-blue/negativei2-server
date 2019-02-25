@@ -2,6 +2,7 @@ import os
 import json
 import logging
 from flask import Flask, request, abort, jsonify
+from flask_cors import CORS
 from schemas.game import MakeMoveInput, CreateGameInput
 from schemas.controller import ControllerRegisterInput
 from .game import Game
@@ -33,6 +34,7 @@ BAD_REQUEST = 400
 REQUEST_OK = 'OK'
 
 app = Flask(__name__)
+CORS(app)
 
 @app.route('/')
 def main():
