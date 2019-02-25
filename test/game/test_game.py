@@ -105,9 +105,6 @@ class GameTest(unittest.TestCase):
         self.assertEqual(self.game_ft.in_progress, False)
 
     # NOTE: Property initial value tests
-    def test_initial_property_id(self):
-        self.assertEqual(self.game.id, '1')
-
     def test_initial_property_board(self):
         self.assertEqual(self.game.board, chess.Board())
 
