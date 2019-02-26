@@ -1,4 +1,5 @@
 import uuid
+import copy
 import time
 from collections import defaultdict
 from unittest.mock import MagicMock
@@ -31,6 +32,10 @@ class MockCollection(MagicMock):
         doc.exists = True
         return time.time(), doc
 
+    def where(self, path, op_string, value):
+        query = MockQuery(self)
+        return query.where(path, op_string, value)
+
 class MockDocumentReference(MagicMock):
     #TODO: Implement creating documents
     def __init__(self, id_, *args, **kwargs):
@@ -49,6 +54,46 @@ class MockDocumentReference(MagicMock):
         self.data = data
         self.exists = True
         # Should return a 'WriteResult' but not currently using
+
+class MockQuery(MagicMock):
+    def __init__(self, collection, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.collection = collection
+        self.matching = copy.deepcopy(collection.documents)
+
+    def where(self, path, op_string, value):
+        path_components = path.split('.')
+        new_matching = {}
+        for id_, doc in self.matching.items():
+            # drill down through doc to check condition, this is our pointer
+            doc_pointer = doc.data
+            for component in path_components:
+                doc_pointer = doc_pointer.get(component, None)
+                if doc_pointer is None:
+                    # If the path doesn't exist in this doc
+                    break
+            else:
+                # If we don't break
+                matched = False
+                if op_string == '<':
+                    matched = doc_pointer < value
+                elif op_string == '<=':
+                    matched = doc_pointer <= value
+                elif op_string == '==':
+                    matched = doc_pointer == value
+                elif op_string == '>=':
+                    matched = doc_pointer >= value
+                elif op_string == '>':
+                    matched = doc_pointer > value
+                if matched:
+                    new_matching[id_] = doc
+
+        self.matching = new_matching
+        return self
+
+    def get(self):
+        return self.matching.values()
+
 
 class keydefaultdict(defaultdict):
     """ Overrides defaultdict to pass the key to the factory """
