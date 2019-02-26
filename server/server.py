@@ -42,7 +42,7 @@ def main():
 
 @app.route('/makemove', methods=["POST"])
 def make_move():
-    errors = MakeMoveInput().validate(request.form)
+    errors = MakeMoveInput(db).validate(request.form)
     if errors:
         abort(BAD_REQUEST, str(errors))
     return REQUEST_OK
