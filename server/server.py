@@ -65,6 +65,12 @@ def create_game():
     doc_ref.create(g.to_dict())
     return get_game(doc_ref.id)
 
+@app.route('/gamelist')
+def game_list():
+    query = db.collection(
+        GAMES_COLLECTION).where('game_over.game_over', '==', False).where('free_slots', '>', 0)
+    return jsonify([ref.to_dict() for ref in query.get()])
+
 @app.route('/joingame', methods=["POST"])
 def join_game():
     errors = JoinGameInput(db).validate(request.form)
