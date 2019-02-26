@@ -51,8 +51,8 @@ class MakeMoveInput(Schema):
         except ValueError:
             raise ValidationError(f"Invalid move {data['move']} in current context.")
         except RuntimeError:
-            # NOTE: This RuntimeError occurs if the game is over. There is another RuntimeError
-            #   game.move that can occur when the current side to play doesn't have an assigned player.
+            # NOTE: This RuntimeError occurs if the game is over. There is another RuntimeError generated
+            #   from game.move that can occur when the current side to play doesn't have an assigned player.
             #   But if this is the case, then the validation previously done for 'user_id' would have caught it.
             #   It might be worth creating our own error subclasses to clearly distinguish errors though.
             raise ValidationError(f"Game {data['game_id']} is over.")
