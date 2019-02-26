@@ -2,6 +2,10 @@
 
 import unittest
 from server.server import app
+from .mock_firebase import MockClient
+
+OK          = 200
+BAD_REQUEST = 400
 
 class MakeMoveTest(unittest.TestCase):
     # Setup and helper functions
@@ -21,21 +25,17 @@ class MakeMoveTest(unittest.TestCase):
         """
         return MakeMoveTest.client.post(MakeMoveTest.route, data=data)
 
+    def setUp(self):
+        self.params = {'game_id': None, 'user_id': None, 'move': None}
+
+    def fill_params(self, game_id=None, user_id=None, move=None):
+        self.params['game_id'] = game_id
+        self.params['user_id'] = user_id
+        self.params['move']    = move
+
     # Tests
 
-    def test_missing_params(self):
-        # NOTE: Request with 'game_id' missing from params
-        response = self.post({
-            'user_id': 'someuser',
-            'move': 'd4'
-        })
-        self.assertEqual(response.status_code, 400)
-
-    def test_correct_params(self):
-        # NOTE: Request with all required params
-        response = self.post({
-            'user_id': 'someuser',
-            'move': 'Qxe6',
-            'game_id': 'somegame'
-        })
-        self.assertEqual(response.status_code, 200)
+    def test_invalid_game_id(self):
+        self.fill_params(game_id='game_that_doesnt_exist')
+        response = self.post(self.params)
+        self.assertEqual(BAD_REQUEST, response.status_code)

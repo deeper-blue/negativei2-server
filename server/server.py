@@ -45,7 +45,21 @@ def make_move():
     errors = MakeMoveInput(db).validate(request.form)
     if errors:
         abort(BAD_REQUEST, str(errors))
-    return REQUEST_OK
+
+    # Get the game reference and construct a Game object
+    game_ref = db.collection(GAMES_COLLECTION).document(request.form['game_id'])
+    game = Game.from_dict(game_ref.get().to_dict())
+
+    # Make the requested move on the game object
+    game.move(request.form['move'])
+
+    # Export the updated Game object to a dict
+    game_dict = game.to_dict()
+
+    # Write the updated Game dict to Firebase
+    game_ref.set(game_dict)
+
+    return jsonify(game_dict)
 
 @app.route('/getgame/<game_id>')
 def get_game(game_id):
