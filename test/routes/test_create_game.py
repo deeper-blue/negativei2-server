@@ -21,18 +21,17 @@ class CreateGameTest(unittest.TestCase):
         cls.client = app.test_client()
 
     def post(self, data):
-        # TODO: find out if below actually uses URL params or POST params as should
         """Helper function for making POST requests.
 
         Usage:
-            # POST /creategame?param_1=1&param_2=2
+            # POST /creategame -F param_1=1 -F param_2=2
             response = self.post({param_1: 1, param_2: 2})
         """
         return CreateGameTest.client.post(self.route, data=data)
 
     def create_dummy_params(self):
         """Helper method to create dummy parameters for /creategame"""
-        return {"creator_id": "some_creator", # TODO: maybe create a dummy player in Firebase?
+        return {"creator_id": "some_creator",
                 "player1_id": "OPEN", # TODO: make a constant in the file that deals with this and import it
                 "player2_id": "OPEN",
                 "time_per_player": 60 * 60, # 1 hour per player
@@ -98,9 +97,9 @@ class CreateGameTest(unittest.TestCase):
 
         # check times
         time = params["time_per_player"]
-        self.assertEquals(time, json_game["time_controls"])
-        self.assertEquals(time, json_game["remaining_time"][WHITE])
-        self.assertEquals(time, json_game["remaining_time"][BLACK])
+        self.assertEqual(time, json_game["time_controls"])
+        self.assertEqual(time, json_game["remaining_time"][WHITE])
+        self.assertEqual(time, json_game["remaining_time"][BLACK])
 
         # check in progress
         self.assertTrue(json_game["in_progress"])
