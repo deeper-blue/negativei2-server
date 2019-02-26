@@ -50,18 +50,16 @@ class MakeMoveInput(Schema):
         if data['user_id'] != game.players[game.turn]:
             raise ValidationError(f"User {data['user_id']} cannot move when it is not their turn.")
 
+        # Check that game is not over
+        if not game.in_progress:
+            raise ValidationError(f"Game {data['game_id']} is over.")
+
         # Validate 'move'
         try:
             # Check move is valid SAN and applicable to the board
             game.move(data['move'])
         except ValueError:
             raise ValidationError(f"Invalid move {data['move']} in current context.")
-        except RuntimeError:
-            # NOTE: This RuntimeError occurs if the game is over. There is another RuntimeError generated
-            #   from game.move that can occur when the current side to play doesn't have an assigned player.
-            #   But if this is the case, then the validation previously done for 'user_id' would have caught it.
-            #   It might be worth creating our own error subclasses to clearly distinguish errors though.
-            raise ValidationError(f"Game {data['game_id']} is over.")
 
 class CreateGameInput(Schema):
     # ID of the user that creates the game
