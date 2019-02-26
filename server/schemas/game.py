@@ -1,9 +1,10 @@
-from marshmallow import Schema, fields, validates, ValidationError
+from marshmallow import Schema, fields, validates, validates_schema, ValidationError
+from server.game import Game
 
 OPEN_SLOT = "OPEN"
 AI = "AI"
 USER_COLLECTION = "users"
-GAMES_COLLECTION = "games"
+GAME_COLLECTION = "games"
 
 def assert_player_exists(player, db):
     """Helper function that checks if a given player id exists in db"""
@@ -19,11 +20,46 @@ class MakeMoveInput(Schema):
     # Identifier for the game to make the move on
     game_id = fields.String(required=True)
 
-    @validates('move')
-    def validate_move(self, value):
-        # TODO: Check move decodes properly
-        # TODO: Check move is applicable to the board
-        pass
+    def __init__(self, db):
+        super().__init__()
+        self.db = db
+
+    @validates_schema
+    def validate_move(self, data):
+        # Validate 'game_id'
+        game_ref = self.db.collection(GAME_COLLECTION).document(data['game_id']).get()
+        if not game_ref.exists:
+            raise ValidationError(f"Game {data['game_id']} doesn\'t exist!")
+
+        # Create a game object for validation
+        game = Game.from_dict(game_ref.to_dict())
+
+        # Validate 'user_id'
+        if data['user_id'] == OPEN_SLOT or data['user_id'] == AI:
+            pass
+        else:
+            user_ref = self.db.collection(USER_COLLECTION).document(data['user_id']).get()
+            if not user_ref.exists:
+                raise ValidationError(f"User {data['user_id']} doesn\'t exist!")
+
+        # Check if user is one of the players of the game
+        if data['user_id'] not in game.players.values():
+            raise ValidationError(f"User {data['user_id']} is not a player in this game.")
+
+        # Check that it's the user's turn
+        if data['user_id'] != game.players[game.turn]:
+            raise ValidationError(f"User {data['user_id']} cannot move when it is not their turn.")
+
+        # Check that game is not over
+        if not game.in_progress:
+            raise ValidationError(f"Game {data['game_id']} is over.")
+
+        # Validate 'move'
+        try:
+            # Check move is valid SAN and applicable to the board
+            game.move(data['move'])
+        except ValueError:
+            raise ValidationError(f"Invalid move {data['move']} in current context.")
 
 class CreateGameInput(Schema):
     # ID of the user that creates the game
@@ -72,7 +108,7 @@ class JoinGameInput(Schema):
 
     @validates('game_id')
     def game_exists(self, value):
-        game_ref = self.db.collection(GAMES_COLLECTION).document(value).get()
+        game_ref = self.db.collection(GAME_COLLECTION).document(value).get()
         if not game_ref.exists:
             raise ValidationError('Game doesn\'t exist!')
 

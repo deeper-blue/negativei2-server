@@ -1,7 +1,13 @@
 """Test cases for the POST server route /makemove."""
 
 import unittest
+import pytest
 from server.server import app
+from unittest.mock import patch
+from .mock_firebase import MockClient
+
+OK          = 200
+BAD_REQUEST = 400
 
 class MakeMoveTest(unittest.TestCase):
     # Setup and helper functions
@@ -21,21 +27,132 @@ class MakeMoveTest(unittest.TestCase):
         """
         return MakeMoveTest.client.post(MakeMoveTest.route, data=data)
 
+    def setUp(self):
+        self.params = {'game_id': None, 'user_id': None, 'move': None}
+        self.mock_game = {
+            'id': 'some_game',
+            'creator': 'some_creator',
+            'players': {'w': 'some_player_1', 'b': 'some_player_2'},
+            'free_slots': 2,
+            'time_controls': None,
+            'remaining_time': {'w': None, 'b': None},
+            'resigned': {'w': False, 'b': False},
+            'draw_offers': {
+                'w': {'made': False, 'accepted': False},
+                'b': {'made': False, 'accepted': False}
+            },
+            'in_progress': True,
+            'result': '*',
+            'game_over': {'game_over': False, 'reason': None},
+            'turn': 'w',
+            'ply_count': 0,
+            'move_count': 1,
+            'pgn': '',
+            'history': [],
+            'fen': 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
+        }
+
+    def fill_params(self, game_id=None, user_id=None, move=None):
+        self.params['game_id'] = game_id
+        self.params['user_id'] = user_id
+        self.params['move']    = move
+
+    def set_up_mock_db(self, mock_db):
+        """Creates some entries in the mock database"""
+        mock_db.collection("users").add({}, document_id='some_creator')
+        mock_db.collection("users").add({}, document_id='some_player_1')
+        mock_db.collection("users").add({}, document_id='some_player_2')
+        mock_db.collection("games").add(self.mock_game, document_id='some_game')
+
     # Tests
 
-    def test_missing_params(self):
-        # NOTE: Request with 'game_id' missing from params
-        response = self.post({
-            'user_id': 'someuser',
-            'move': 'd4'
-        })
-        self.assertEqual(response.status_code, 400)
+    @patch('server.server.db', new_callable=MockClient)
+    def test_game_doesnt_exist(self, mock_db):
+        """Make a move on a game that doesn't exist."""
+        self.set_up_mock_db(mock_db)
+        self.fill_params(game_id='game_that_doesnt_exist', user_id='some_player_1', move='e4')
+        response = self.post(self.params)
+        self.assertEqual(BAD_REQUEST, response.status_code)
 
-    def test_correct_params(self):
-        # NOTE: Request with all required params
-        response = self.post({
-            'user_id': 'someuser',
-            'move': 'Qxe6',
-            'game_id': 'somegame'
-        })
-        self.assertEqual(response.status_code, 200)
+    @patch('server.server.db', new_callable=MockClient)
+    def test_game_exists(self, mock_db):
+        """Make a move on a game that exists."""
+        self.set_up_mock_db(mock_db)
+        self.fill_params(game_id='some_game', user_id='some_player_1', move='e4')
+        response = self.post(self.params)
+        self.assertEqual(OK, response.status_code)
+
+    @pytest.mark.skip(reason = "Need to decide how open slots will be dealt with")
+    @patch('server.server.db', new_callable=MockClient)
+    def test_user_id_open_slot(self, mock_db):
+        """Make a move with the user ID set as the open slot."""
+        self.set_up_mock_db(mock_db)
+        self.fill_params(game_id='some_game', user_id='OPEN', move='e4')
+        response = self.post(self.params)
+        self.assertEqual(OK, response.status_code)
+
+    @pytest.mark.skip(reason = "Need to decide how AI slots will be dealt with")
+    @patch('server.server.db', new_callable=MockClient)
+    def test_user_id_ai_slot(self):
+        """Make a move with the user ID set as the AI slot."""
+        self.set_up_mock_db(mock_db)
+        self.fill_params(game_id='some_game', user_id='AI', move='e4')
+        response = self.post(self.params)
+        self.assertEqual(OK, response.status_code)
+
+    @patch('server.server.db', new_callable=MockClient)
+    def test_user_id_doesnt_exist(self, mock_db):
+        """Make a move with the ID of a user that doesn't exist."""
+        self.set_up_mock_db(mock_db)
+        self.fill_params(game_id='some_game', user_id='user_that_doesnt_exist', move='e4')
+        response = self.post(self.params)
+        self.assertEqual(BAD_REQUEST, response.status_code)
+
+    @patch('server.server.db', new_callable=MockClient)
+    def test_user_not_in_game(self, mock_db):
+        """Make a move with the ID of a user that exists, but isn't a player in the game."""
+        self.set_up_mock_db(mock_db)
+        self.fill_params(game_id='some_game', user_id='some_creator', move='e4')
+        response = self.post(self.params)
+        self.assertEqual(BAD_REQUEST, response.status_code)
+
+    @patch('server.server.db', new_callable=MockClient)
+    def test_user_wrong_turn(self, mock_db):
+        """Make a move from the player whose side it isn't to play."""
+        self.set_up_mock_db(mock_db)
+        self.fill_params(game_id='some_game', user_id='some_player_2', move='e4')
+        response = self.post(self.params)
+        self.assertEqual(BAD_REQUEST, response.status_code)
+
+    @patch('server.server.db', new_callable=MockClient)
+    def test_user_correct_turn(self, mock_db):
+        """Make a move from the player whose side it is to play."""
+        self.set_up_mock_db(mock_db)
+        self.fill_params(game_id='some_game', user_id='some_player_1', move='e4')
+        response = self.post(self.params)
+        self.assertEqual(OK, response.status_code)
+
+    @patch('server.server.db', new_callable=MockClient)
+    def test_game_over(self, mock_db):
+        """Make a move in a game which is over."""
+        self.mock_game['resigned']['w'] = True
+        self.set_up_mock_db(mock_db)
+        self.fill_params(game_id='some_game', user_id='some_player_1', move='e4')
+        response = self.post(self.params)
+        self.assertEqual(BAD_REQUEST, response.status_code)
+
+    @patch('server.server.db', new_callable=MockClient)
+    def test_move_invalid_san_notation(self, mock_db):
+        """Make a move with invalid SAN notation."""
+        self.set_up_mock_db(mock_db)
+        self.fill_params(game_id='some_game', user_id='some_player_1', move='wrong_notation')
+        response = self.post(self.params)
+        self.assertEqual(BAD_REQUEST, response.status_code)
+
+    @patch('server.server.db', new_callable=MockClient)
+    def test_move_invalid_san_context(self, mock_db):
+        """Make a move which is valid SAN, but invalid in the current context."""
+        self.set_up_mock_db(mock_db)
+        self.fill_params(game_id='some_game', user_id='some_player_1', move='Nc6')
+        response = self.post(self.params)
+        self.assertEqual(BAD_REQUEST, response.status_code)
