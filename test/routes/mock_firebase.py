@@ -1,5 +1,6 @@
 import uuid
 import time
+import copy
 from collections import defaultdict
 from unittest.mock import MagicMock
 
@@ -27,12 +28,11 @@ class MockCollection(MagicMock):
         if document_id is None:
             document_id = str(uuid.uuid4())
         doc = self.documents[document_id]
-        doc.data = document_data
+        doc.data = copy.deepcopy(document_data)
         doc.exists = True
         return time.time(), doc
 
 class MockDocumentReference(MagicMock):
-    #TODO: Implement creating documents
     def __init__(self, id_, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.exists = False
@@ -46,7 +46,12 @@ class MockDocumentReference(MagicMock):
         return self
 
     def create(self, data):
-        self.data = data
+        self.data = copy.deepcopy(data)
+        self.exists = True
+        # Should return a 'WriteResult' but not currently using
+
+    def set(self, data):
+        self.data = copy.deepcopy(data)
         self.exists = True
         # Should return a 'WriteResult' but not currently using
 
