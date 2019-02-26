@@ -1,5 +1,7 @@
 import uuid
+import copy
 import time
+import copy
 from collections import defaultdict
 from unittest.mock import MagicMock
 
@@ -27,12 +29,15 @@ class MockCollection(MagicMock):
         if document_id is None:
             document_id = str(uuid.uuid4())
         doc = self.documents[document_id]
-        doc.data = document_data
+        doc.data = copy.deepcopy(document_data)
         doc.exists = True
         return time.time(), doc
 
+    def where(self, path, op_string, value):
+        query = MockQuery(self)
+        return query.where(path, op_string, value)
+
 class MockDocumentReference(MagicMock):
-    #TODO: Implement creating documents
     def __init__(self, id_, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.exists = False
@@ -46,9 +51,54 @@ class MockDocumentReference(MagicMock):
         return self
 
     def create(self, data):
-        self.data = data
+        self.data = copy.deepcopy(data)
         self.exists = True
         # Should return a 'WriteResult' but not currently using
+
+    def set(self, data):
+        self.data = copy.deepcopy(data)
+        self.exists = True
+        # Should return a 'WriteResult' but not currently using
+
+class MockQuery(MagicMock):
+    def __init__(self, collection, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.collection = collection
+        self.matching = copy.deepcopy(collection.documents)
+
+    def where(self, path, op_string, value):
+        path_components = path.split('.')
+        new_matching = {}
+        for id_, doc in self.matching.items():
+            # drill down through doc to check condition, this is our pointer
+            doc_pointer = doc.data
+            for component in path_components:
+                doc_pointer = doc_pointer.get(component, None)
+                if doc_pointer is None:
+                    # If the path doesn't exist in this doc
+                    break
+            else:
+                # If we don't break
+                matched = False
+                if op_string == '<':
+                    matched = doc_pointer < value
+                elif op_string == '<=':
+                    matched = doc_pointer <= value
+                elif op_string == '==':
+                    matched = doc_pointer == value
+                elif op_string == '>=':
+                    matched = doc_pointer >= value
+                elif op_string == '>':
+                    matched = doc_pointer > value
+                if matched:
+                    new_matching[id_] = doc
+
+        self.matching = new_matching
+        return self
+
+    def get(self):
+        return self.matching.values()
+
 
 class keydefaultdict(defaultdict):
     """ Overrides defaultdict to pass the key to the factory """
