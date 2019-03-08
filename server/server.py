@@ -130,7 +130,7 @@ def controller_poll(board_id):
 @socketio.on('register')
 def register_for_game_updates(game_id):
     join_room(game_id)
-    app.logger.info("Client joined game_id")
+    app.logger.info(f"Client joined {game_id}")
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0')
