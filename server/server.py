@@ -164,7 +164,7 @@ def respond_to_draw_offer():
     game_ref = db.collection(GAMES_COLLECTION).document(request.form['game_id'])
     game = Game.from_dict(game_ref.get().to_dict())
 
-    # Retrieve the player's side and respond to the offer
+    # Retrieve the player's side
     players = {player: side for side, player in game.players.items()}
     side = players[request.form['user_id']]
 
