@@ -132,6 +132,28 @@ def register_for_game_updates(game_id):
     join_room(game_id)
     app.logger.info(f"Client joined {game_id}")
 
+@app.route('/drawoffer', methods=["POST"])
+def draw_offer():
+    errors = DrawOfferInput(db).validate(request.form)
+    if errors:
+        abort(BAD_REQUEST, str(errors))
+
+    # Get the game reference and construct a Game object
+    game_ref = db.collection(GAMES_COLLECTION).document(request.form['game_id'])
+    game = Game.from_dict(game_ref.get().to_dict())
+
+    # Retrieve the player's side and make the offer
+    players = {player: side for side, player in game.players.items()}
+    game.offer_draw(side=players[request.form['user_id']])
+
+    # Export the updated Game object to a dict
+    game_dict = game.to_dict()
+
+    # Write the updated Game dict to Firebase
+    game_ref.set(game_dict)
+
+    return jsonify(game_dict)
+
 if __name__ == "__main__":
     app.run(host='0.0.0.0')
 else:
