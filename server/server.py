@@ -169,9 +169,9 @@ def respond_to_draw_offer():
     side = players[request.form['user_id']]
 
     # Accept or decline the draw (depending on the response)
-    if request.form['response']:
+    if request.form['response'] == 'True':
         game.accept_draw(side=side)
-    else
+    else:
         game.decline_draw(side=side)
 
     # Export the updated Game object to a dict
