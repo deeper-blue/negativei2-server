@@ -1,4 +1,4 @@
-"""Test cases for the POST server route /makemove."""
+"""Test cases for the POST server route /drawoffer."""
 
 import unittest
 import pytest
@@ -23,7 +23,7 @@ class DrawOfferTest(unittest.TestCase):
         """Helper function for making POST requests.
 
         Usage:
-            # POST /drawoffer?param_1=1&param_2=2
+            Making a POST request to /drawoffer with params {param_1: 1, param_2: 2} can be done with:
             response = self.post({param_1: 1, param_2: 2})
         """
         return DrawOfferTest.client.post(DrawOfferTest.route, data=data)
