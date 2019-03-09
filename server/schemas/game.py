@@ -142,9 +142,7 @@ class DrawOfferInput(Schema):
         game = Game.from_dict(game_ref.to_dict())
 
         # Check if user exists
-        user_ref = self.db.collection(USER_COLLECTION).document(data['user_id']).get()
-        if not user_ref.exists:
-            raise ValidationError(f"User {data['user_id']} doesn\'t exist!")
+        assert_player_exists(data['user_id'], self.db)
 
         # Check if user is one of the players of the game
         if data['user_id'] not in game.players.values():
