@@ -4,7 +4,7 @@ import logging
 from flask import Flask, request, abort, jsonify
 from flask_cors import CORS
 from flask_socketio import SocketIO, join_room
-from schemas.game import MakeMoveInput, CreateGameInput, JoinGameInput, DrawOfferInput
+from schemas.game import MakeMoveInput, CreateGameInput, JoinGameInput, DrawOfferInput, RespondOfferInput
 from schemas.controller import ControllerRegisterInput
 from .game import Game
 import google.cloud
@@ -145,6 +145,34 @@ def draw_offer():
     # Retrieve the player's side and make the offer
     players = {player: side for side, player in game.players.items()}
     game.offer_draw(side=players[request.form['user_id']])
+
+    # Export the updated Game object to a dict
+    game_dict = game.to_dict()
+
+    # Write the updated Game dict to Firebase
+    game_ref.set(game_dict)
+
+    return jsonify(game_dict)
+
+@app.route('/respondoffer', methods=["POST"])
+def respond_to_draw_offer():
+    errors = RespondOfferInput(db).validate(request.form)
+    if errors:
+        abort(BAD_REQUEST, str(errors))
+
+    # Get the game reference and construct a Game object
+    game_ref = db.collection(GAMES_COLLECTION).document(request.form['game_id'])
+    game = Game.from_dict(game_ref.get().to_dict())
+
+    # Retrieve the player's side and respond to the offer
+    players = {player: side for side, player in game.players.items()}
+    side = players[request.form['user_id']]
+
+    # Accept or decline the draw (depending on the response)
+    if request.form['response']:
+        game.accept_draw(side=side)
+    else
+        game.decline_draw(side=side)
 
     # Export the updated Game object to a dict
     game_dict = game.to_dict()
