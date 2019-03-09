@@ -4,7 +4,7 @@ import logging
 from flask import Flask, request, abort, jsonify
 from flask_cors import CORS
 from flask_socketio import SocketIO, join_room
-from schemas.game import MakeMoveInput, CreateGameInput, JoinGameInput
+from schemas.game import MakeMoveInput, CreateGameInput, JoinGameInput, DrawOfferInput
 from schemas.controller import ControllerRegisterInput
 from .game import Game
 import google.cloud
