@@ -121,7 +121,7 @@ class JoinGameInput(Schema):
         if value != 'w' and value != 'b':
             raise ValidationError('Expected side to be one of "w", "b".')
 
-class DrawGameInput(Schema):
+class DrawOfferInput(Schema):
     # The user making the draw offer
     user_id = fields.String(required=True)
     # Identifier for the game to make the move on
