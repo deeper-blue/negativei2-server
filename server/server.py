@@ -1,5 +1,6 @@
 import os
 import json
+import time
 import logging
 from flask import Flask, request, abort, jsonify
 from flask_cors import CORS
@@ -30,6 +31,7 @@ else:
     db = None
 
 GAMES_COLLECTION = "games"
+CONTROLLER_COLLECTION = "controllers"
 
 BAD_REQUEST = 400
 REQUEST_OK = 'OK'
@@ -118,10 +120,14 @@ def join_game():
 
 @app.route('/controllerregister', methods=["POST"])
 def register_controller():
-    errors = ControllerRegisterInput().validate(request.form)
+    errors = ControllerRegisterInput(db).validate(request.form)
     if errors:
         abort(BAD_REQUEST, str(errors))
-    return '0'
+    controller_id = request.form["board_id"]
+    controller_ref = db.collection(CONTROLLER_COLLECTION).document(controller_id)
+    controller_dict = {"last_seen": time.time(), **request.form}
+    controller_ref.set(controller_dict)
+    return 'registered'
 
 @app.route('/controllerpoll/<board_id>')
 def controller_poll(board_id):
