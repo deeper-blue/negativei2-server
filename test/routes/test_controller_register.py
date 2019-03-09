@@ -25,11 +25,7 @@ class ControllerRegisterTest(unittest.TestCase):
             # POST /controllerregister -F "param_1=1&param_2=2"
             response = self.post({param_1: 1, param_2: 2})
         """
-        return ControllerRegisterTest.client.post(self.route, data=data)
-
-    def set_up_mock_db(self, mock_db):
-        "Creates some entries in the mock database"
-        pass
+        return self.client.post(self.route, data=data)
 
     @patch('server.server.db', new_callable=MockClient)
     def test_new_controller_can_register(self, mock_db):
