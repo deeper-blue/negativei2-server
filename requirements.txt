@@ -10,3 +10,5 @@ gunicorn==19.9.0
 firebase-admin==2.16.0
 google-cloud-firestore==0.31.0
 flask-cors==3.0.7
+flask-socketio==3.3.1
+eventlet==0.24.1

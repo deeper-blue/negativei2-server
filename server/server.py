@@ -3,6 +3,7 @@ import json
 import logging
 from flask import Flask, request, abort, jsonify
 from flask_cors import CORS
+from flask_socketio import SocketIO, join_room
 from schemas.game import MakeMoveInput, CreateGameInput, JoinGameInput
 from schemas.controller import ControllerRegisterInput
 from .game import Game
@@ -35,6 +36,7 @@ REQUEST_OK = 'OK'
 
 app = Flask(__name__)
 CORS(app)
+socketio = SocketIO(app)
 
 @app.route('/')
 def main():
@@ -58,6 +60,9 @@ def make_move():
 
     # Write the updated Game dict to Firebase
     game_ref.set(game_dict)
+
+    # update all clients
+    socketio.emit("move", game_dict, room=game.id)
 
     return jsonify(game_dict)
 
@@ -121,6 +126,11 @@ def register_controller():
 @app.route('/controllerpoll/<board_id>')
 def controller_poll(board_id):
     return get_game(board_id)
+
+@socketio.on('register')
+def register_for_game_updates(game_id):
+    join_room(game_id)
+    app.logger.info(f"Client joined {game_id}")
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0')
