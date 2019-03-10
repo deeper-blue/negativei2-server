@@ -494,7 +494,7 @@ class Game:
         """Decline a draw offer made by the other side.
 
         Arguments:
-            side: The side accepting the draw.
+            side: The side declining the draw.
         """
 
         # If no side argument given, then assume it's the current side to play
