@@ -185,6 +185,10 @@ class ResignInput(Schema):
     # Identifier for the game to make the move on
     game_id = fields.String(required=True)
 
+    def __init__(self, db):
+        super().__init__()
+        self.db = db
+
     @validates_schema
     def validate_resignation(self, data):
         # Check if game exists
