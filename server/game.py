@@ -154,11 +154,7 @@ class Game:
 
     @property
     def result(self) -> str:
-        """The game result (1-0, 0-1, 1/2-1/2, or * if the game is in progress).
-
-        TODO: Once draw offering/accepting has been integrated into the class,
-            this function property will have to be changed to accomodate this.
-        """
+        """The game result (1-0, 0-1, 1/2-1/2, or * if the game is in progress)."""
 
         # Always claim a draw when possible (By three-fold repetition or fifty-move rule)
         result = self._board.result(claim_draw=True)
