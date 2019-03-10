@@ -10,6 +10,8 @@ SCORES = {
     'draw': '1/2-1/2'
 }
 
+SLOTS = ['OPEN', 'AI']
+
 class Game:
     """Class representing and encapsulating the logic required for handling a chess game with time controls.
 
@@ -546,14 +548,15 @@ class Game:
 
         Assumes that the input dictionary has already been validated against the schema.
         """
-        g = cls(input_dict['creator_id'], game_id, int(input_dict['time_per_player']))
-        #TODO: below constants should be places somewhere unified
-        if input_dict['player1_id'] not in ['OPEN', 'AI']:
-            g.add_player(input_dict['player1_id'], 'w')
-        if input_dict['player2_id'] not in ['OPEN', 'AI']:
-            g.add_player(input_dict['player2_id'], 'b')
 
-        return g
+        game = cls(input_dict['creator_id'], game_id, int(input_dict['time_per_player']))
+
+        if input_dict['player1_id'] not in SLOTS:
+            game.add_player(input_dict['player1_id'], WHITE)
+        if input_dict['player2_id'] not in SLOTS:
+            game.add_player(input_dict['player2_id'], BLACK)
+
+        return game
 
     @classmethod
     def from_dict(cls, input_dict):
