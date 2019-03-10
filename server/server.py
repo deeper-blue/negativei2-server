@@ -135,8 +135,12 @@ def controller_poll():
     if errors:
         abort(BAD_REQUEST, str(errors))
     controller_id = request.form['board_id']
-    controller_ref = db.collection(CONTROLLER_COLLECTION).document(controller_id).get()
-    controller_dict = controller_ref.to_dict()
+    controller_ref = db.collection(CONTROLLER_COLLECTION).document(controller_id)
+    controller_dict = controller_ref.get().to_dict()
+
+    # update last_seen
+    controller_dict['last_seen'] = time.time()
+    controller_ref.set(controller_dict)
 
     poll_response = {'game_over': {'game_over': False, 'reason': None}, 'history': []}
 
