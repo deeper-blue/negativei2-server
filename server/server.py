@@ -125,7 +125,13 @@ def register_controller():
         abort(BAD_REQUEST, str(errors))
     controller_id = request.form["board_id"]
     controller_ref = db.collection(CONTROLLER_COLLECTION).document(controller_id)
-    controller_dict = {"last_seen": time.time(), "game_id": None, **request.form}
+
+    controller_dict = {"game_id": None, **request.form}
+    # avoid overwriting game_id
+    if controller_ref.get().exists:
+        controller_dict = controller_ref.get().to_dict()
+    controller_dict['last_seen'] = time.time()
+
     controller_ref.set(controller_dict)
     return 'registered'
 
