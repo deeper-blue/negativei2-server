@@ -147,3 +147,34 @@ class DrawOfferInput(Schema):
         # Check if user is one of the players of the game
         if data['user_id'] not in game.players.values():
             raise ValidationError(f"User {data['user_id']} is not a player in this game.")
+
+class RespondOfferInput(Schema):
+    # The user making the draw offer
+    user_id = fields.String(required=True)
+    # Identifier for the game to make the move on
+    game_id = fields.String(required=True)
+    # Response to the draw offer
+    # Accept -> True
+    # Decline -> False
+    response = fields.Boolean(required=True)
+
+    def __init__(self, db):
+        super().__init__()
+        self.db = db
+
+    @validates_schema
+    def validate_offer_response(self, data):
+        # Check if game exists
+        game_ref = self.db.collection(GAME_COLLECTION).document(data['game_id']).get()
+        if not game_ref.exists:
+            raise ValidationError('Game doesn\'t exist!')
+
+        # Create a game object for validation
+        game = Game.from_dict(game_ref.to_dict())
+
+        # Check if user exists
+        assert_player_exists(data['user_id'], self.db)
+
+        # Check if user is one of the players of the game
+        if data['user_id'] not in game.players.values():
+            raise ValidationError(f"User {data['user_id']} is not a player in this game.")
