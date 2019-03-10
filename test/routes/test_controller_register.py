@@ -60,3 +60,13 @@ class ControllerRegisterTest(unittest.TestCase):
         mock_db.collection(CONTROLLER_COLLECTION).document(controller_id).data["last_seen"] -= 2*TIMEOUT
         response = self.post(params)
         self.assertEqual(OK, response.status_code)
+
+    @patch('server.server.db', new_callable=MockClient)
+    def test_controller_register_with_no_game(self, mock_db):
+        "When a controller registers it should not have a game assigned"
+        controller_id = "kevin"
+        params = {"board_id": controller_id,
+                  "board_version": "0.0.1"}
+        response = self.post(params)
+        self.assertEqual(OK, response.status_code)
+        self.assertIsNone(mock_db.collection(CONTROLLER_COLLECTION).document(controller_id).data["game_id"])
