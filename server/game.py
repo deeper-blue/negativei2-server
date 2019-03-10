@@ -532,7 +532,7 @@ class Game:
         for piece in ['r', 'n', 'b', 'q', 'k', 'p']:
             output = output.replace(piece, chess.UNICODE_PIECE_SYMBOLS[piece])
 
-        # Add file rank labels
+        # Add file labels
         ranks = [f"{8-i} {rank}" for i, rank in enumerate(output.split('\n'))]
 
         # Add rank labels
