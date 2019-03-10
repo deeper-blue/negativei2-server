@@ -572,7 +572,7 @@ class Game:
             raise KeyError(f"Missing required attribute keys from 'input_dict': {missing_keys}")
 
         # Create a new game object
-        game = Game(input_dict['creator'], input_dict['id'])
+        game = cls(input_dict['creator'], input_dict['id'])
 
         # Generate a new internal board (FEN)
         game._board = chess.Board()
