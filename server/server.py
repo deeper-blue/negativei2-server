@@ -1,11 +1,12 @@
 import os
 import json
+import time
 import logging
 from flask import Flask, request, abort, jsonify
 from flask_cors import CORS
 from flask_socketio import SocketIO, join_room
 from schemas.game import MakeMoveInput, CreateGameInput, JoinGameInput, DrawOfferInput, RespondOfferInput, ResignInput
-from schemas.controller import ControllerRegisterInput
+from schemas.controller import ControllerRegisterInput, ControllerPollInput
 from .game import Game
 import google.cloud
 from google.cloud import firestore
@@ -30,6 +31,7 @@ else:
     db = None
 
 GAMES_COLLECTION = "games"
+CONTROLLER_COLLECTION = "controllers"
 
 BAD_REQUEST = 400
 REQUEST_OK = 'OK'
@@ -118,14 +120,53 @@ def join_game():
 
 @app.route('/controllerregister', methods=["POST"])
 def register_controller():
-    errors = ControllerRegisterInput().validate(request.form)
+    errors = ControllerRegisterInput(db).validate(request.form)
     if errors:
         abort(BAD_REQUEST, str(errors))
-    return '0'
+    controller_id = request.form["board_id"]
+    controller_ref = db.collection(CONTROLLER_COLLECTION).document(controller_id)
 
-@app.route('/controllerpoll/<board_id>')
-def controller_poll(board_id):
-    return get_game(board_id)
+    controller_dict = {"game_id": None, **request.form}
+    # avoid overwriting game_id
+    if controller_ref.get().exists:
+        controller_dict = controller_ref.get().to_dict()
+    controller_dict['last_seen'] = time.time()
+
+    controller_ref.set(controller_dict)
+    return 'registered'
+
+@app.route('/controllerpoll', methods=["POST"])
+def controller_poll():
+    errors = ControllerPollInput(db).validate(request.form)
+    if errors:
+        abort(BAD_REQUEST, str(errors))
+    controller_id = request.form['board_id']
+    controller_ref = db.collection(CONTROLLER_COLLECTION).document(controller_id)
+    controller_dict = controller_ref.get().to_dict()
+
+    # update last_seen
+    controller_dict['last_seen'] = time.time()
+    controller_ref.set(controller_dict)
+
+    poll_response = {'game_over': {'game_over': False, 'reason': None}, 'history': []}
+
+    game_id = controller_dict['game_id']
+    ply_count = int(request.form['ply_count'])
+    error = int(request.form.get('error', -1))
+
+    if error != -1:
+        # let web app know about error
+        socketio.emit("controller_error", error, room=game_id)
+
+    if game_id is not None and error == -1:
+        game_dict = db.collection(GAMES_COLLECTION).document(game_id).get().to_dict()
+        poll_response['game_over'] = game_dict['game_over']
+
+        # game_dict['ply_count'] == len(history)
+        for i in range(ply_count, game_dict['ply_count']):
+            poll_response['history'].append(game_dict['history'][i])
+
+    return jsonify(poll_response)
 
 @socketio.on('register')
 def register_for_game_updates(game_id):
