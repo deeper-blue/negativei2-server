@@ -28,12 +28,12 @@ with open(ACCOUNT_JSON_FILENAME, 'w') as account_file:
 # Initialising this on Travis breaks the test suite
 if os.environ.get("CI", None) != "true":
     db = firestore.Client("assistive-chess-robot")
+    # can't do this in a CI environment
+    cred = credentials.Certificate(ACCOUNT_JSON_FILENAME)
+    default_app = firebase_admin.initialize_app(cred)
 else:
     # reassigned by a mock object
     db = None
-
-cred = credentials.Certificate(ACCOUNT_JSON_FILENAME)
-default_app = firebase_admin.initialize_app(cred)
 
 GAMES_COLLECTION = "games"
 CONTROLLER_COLLECTION = "controllers"
