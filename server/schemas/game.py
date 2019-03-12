@@ -1,6 +1,6 @@
 from marshmallow import Schema, fields, validates, validates_schema, ValidationError
 from server.game import Game
-import firebase
+import firebase_admin.auth
 
 OPEN_SLOT = "OPEN"
 AI = "AI"
@@ -9,9 +9,9 @@ GAME_COLLECTION = "games"
 
 def assert_player_exists(player):
     """Helper function that checks if a given player id exists in firebase authentication"""
-    auth = firebase.auth()
-    #user_ref = auth.getUser(player);
-    if not auth.getUser(player).exists:
+    try:
+        firebase_admin.auth.get_user(player)
+    except firebase_admin.auth.AuthError:
         raise ValidationError(f'User {player} doesn\'t exist!')
 
 class MakeMoveInput(Schema):
@@ -175,7 +175,7 @@ class RespondOfferInput(Schema):
         game = Game.from_dict(game_ref.to_dict())
 
         # Check if user exists
-        assert_player_exists(data['user_id'], self.db)
+        assert_player_exists(data['user_id'])
 
         # Check if user is one of the players of the game
         if data['user_id'] not in game.players.values():
@@ -202,7 +202,7 @@ class ResignInput(Schema):
         game = Game.from_dict(game_ref.to_dict())
 
         # Check if user exists
-        assert_player_exists(data['user_id'], self.db)
+        assert_player_exists(data['user_id'])
 
         # Check if user is one of the players of the game
         if data['user_id'] not in game.players.values():
