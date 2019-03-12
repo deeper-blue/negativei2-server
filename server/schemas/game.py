@@ -4,7 +4,6 @@ import firebase_admin.auth
 
 OPEN_SLOT = "OPEN"
 AI = "AI"
-USER_COLLECTION = "users"
 GAME_COLLECTION = "games"
 
 def assert_player_exists(player):
@@ -40,9 +39,7 @@ class MakeMoveInput(Schema):
         if data['user_id'] == OPEN_SLOT or data['user_id'] == AI:
             pass
         else:
-            user_ref = self.db.collection(USER_COLLECTION).document(data['user_id']).get()
-            if not user_ref.exists:
-                raise ValidationError(f"User {data['user_id']} doesn\'t exist!")
+            assert_player_exists(data['user_id'])
 
         # Check if user is one of the players of the game
         if data['user_id'] not in game.players.values():
