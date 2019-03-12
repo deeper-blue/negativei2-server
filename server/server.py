@@ -158,7 +158,7 @@ def controller_poll():
         # let web app know about error
         socketio.emit("controller_error", error, room=game_id)
 
-    if game_id != None and error == -1:
+    if game_id is not None and error == -1:
         game_dict = db.collection(GAMES_COLLECTION).document(game_id).get().to_dict()
         poll_response['game_over'] = game_dict['game_over']
 

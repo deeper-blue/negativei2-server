@@ -77,7 +77,7 @@ class ControllerPollTest(unittest.TestCase):
         return self.client.post(self.route, data=data)
 
     def set_up_mock_db(self, mock_db):
-        "Helper function to populate db"
+        """Helper function to populate db"""
         kevin = {"board_id": "kevin", "board_version": "0.0.1",
                  "last_seen": time.time(), "game_id": None}
         mock_db.collection(CONTROLLER_COLLECTION).document("kevin").set(kevin)
@@ -86,7 +86,7 @@ class ControllerPollTest(unittest.TestCase):
 
     @patch('server.server.db', new_callable=MockClient)
     def test_return_empty_if_no_assigned_game(self, mock_db):
-        "If there is no assigned game to the controller, there should be nothing to do"
+        """If there is no assigned game to the controller, there should be nothing to do"""
         self.set_up_mock_db(mock_db)
         params = {"board_id": "kevin", "ply_count": 0, "error": None}
         response = self.post(params)
@@ -96,7 +96,7 @@ class ControllerPollTest(unittest.TestCase):
 
     @patch('server.server.db', new_callable=MockClient)
     def test_return_empty_if_no_history(self, mock_db):
-        "Should return no moves if game has no moves"
+        """Should return no moves if game has no moves"""
         self.set_up_mock_db(mock_db)
         mock_db.collection(CONTROLLER_COLLECTION).document("kevin").data["game_id"] = "no_history"
         params = {"board_id": "kevin", "ply_count": 0, "error": None}
@@ -107,7 +107,7 @@ class ControllerPollTest(unittest.TestCase):
 
     @patch('server.server.db', new_callable=MockClient)
     def test_return_all_history_if_ply_0(self, mock_db):
-        "Should return the whole history if a game has 0 moves"
+        """Should return the whole history if a game has 0 moves"""
         self.set_up_mock_db(mock_db)
         mock_db.collection(CONTROLLER_COLLECTION).document("kevin").data["game_id"] = "two_moves"
         params = {"board_id": "kevin", "ply_count": 0, "error": None}
@@ -118,7 +118,7 @@ class ControllerPollTest(unittest.TestCase):
 
     @patch('server.server.db', new_callable=MockClient)
     def test_should_return_partial_history_if_ply_nonzero(self, mock_db):
-        "Should only return moves after ply"
+        """Should only return moves after ply"""
         self.set_up_mock_db(mock_db)
         mock_db.collection(CONTROLLER_COLLECTION).document("kevin").data["game_id"] = "two_moves"
         params = {"board_id": "kevin", "ply_count": 1, "error": None}
@@ -129,7 +129,7 @@ class ControllerPollTest(unittest.TestCase):
 
     @patch('server.server.db', new_callable=MockClient)
     def test_return_nothing_when_error(self, mock_db):
-        "When the controller reports an error, the server should return nothing"
+        """When the controller reports an error, the server should return nothing"""
         self.set_up_mock_db(mock_db)
         mock_db.collection(CONTROLLER_COLLECTION).document("kevin").data["game_id"] = "two_moves"
         params = {"board_id": "kevin", "ply_count": 1, "error": 1}
@@ -141,7 +141,7 @@ class ControllerPollTest(unittest.TestCase):
 
     @patch('server.server.db', new_callable=MockClient)
     def test_unknown_controller_errors(self, mock_db):
-        "If the controller is not registered, should error"
+        """If the controller is not registered, should error"""
         self.set_up_mock_db(mock_db)
         params = {"board_id": "unknown_board", "ply_count": 0, "error": None}
         response = self.post(params)
@@ -149,7 +149,7 @@ class ControllerPollTest(unittest.TestCase):
 
     @patch('server.server.db', new_callable=MockClient)
     def test_registration_time_out_errors(self, mock_db):
-        "If the controller has not been seen in TIME_OUT seconds, should error"
+        """If the controller has not been seen in TIME_OUT seconds, should error"""
         self.set_up_mock_db(mock_db)
         mock_db.collection(CONTROLLER_COLLECTION).document("kevin").data["last_seen"] -= 2*TIMEOUT
         params = {"board_id": "kevin", "ply_count": 0, "error": None}
