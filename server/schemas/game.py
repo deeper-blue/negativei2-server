@@ -1,20 +1,15 @@
 from marshmallow import Schema, fields, validates, validates_schema, ValidationError
 from server.game import Game
+import firebase
 
 OPEN_SLOT = "OPEN"
 AI = "AI"
 USER_COLLECTION = "users"
 GAME_COLLECTION = "games"
 
-'''def assert_player_exists(player, db):
-    """Helper function that checks if a given player id exists in db"""
-    user_ref = db.collection(USER_COLLECTION).document(player).get()
-    if not user_ref.exists:
-        raise ValidationError(f'User {player} doesn\'t exist!')'''
-
 def assert_player_exists(player):
-    """Helper function that checks if a given player id exists in db"""
-    auth = Firebase.auth()
+    """Helper function that checks if a given player id exists in firebase authentication"""
+    auth = firebase.auth()
     #user_ref = auth.getUser(player);
     if not auth.getUser(player).exists:
         raise ValidationError(f'User {player} doesn\'t exist!')
