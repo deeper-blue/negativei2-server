@@ -1,5 +1,6 @@
 import chess
 import chess.pgn
+from itertools import product
 
 WHITE = 'w'
 BLACK = 'b'
@@ -72,6 +73,8 @@ class Game:
             WHITE: {'made': False, 'accepted': False},
             BLACK: {'made': False, 'accepted': False}
         }
+        # generate all positions that initially contain pieces to track pieces
+        self._initial_pos_dict = {sq: sq for sq in product(chess.FILE_NAMES, ['1', '2', '7', '8'])}
 
     @property
     def id(self) -> str:
@@ -232,6 +235,17 @@ class Game:
         # If none of the above, then the game is not over
         return {'game_over': False, 'reason': None}
 
+    @property
+    def initial_pos_dict(self) -> dict:
+        return self._initial_pos_dict
+
+    def _get_en_passant_square(self) -> str:
+        """If an en passant move was just made, this returns the square of the captured piece"""
+        # NOTE: The 'down' shift performed below to get the square behind the en-passant square comes from:
+        # https://github.com/niklasf/python-chess/blob/102ca5d89e23d5bb9413fb384a78ac4eb4f48bf9/chess/__init__.py#L1963
+        down = -8 if self.turn == WHITE else 8
+        return chess.square_name(self._board.ep_square + down)
+
     def _construct_move_description(self, move) -> dict:
         """Constructs an extended move description for a single move, detailing all necessary information about the move.
 
@@ -285,10 +299,7 @@ class Game:
         # Update the capture piece and en-passant square value to account for en-passant capture
         if description['capture']['capture']:
             if description['en_passant']['en_passant']:
-                # NOTE: The 'down' shift performed below to get the square behind the en-passant square comes from:
-                # https://github.com/niklasf/python-chess/blob/102ca5d89e23d5bb9413fb384a78ac4eb4f48bf9/chess/__init__.py#L1963
-                down = -8 if self.turn == WHITE else 8
-                description['en_passant']['square'] = chess.square_name(self._board.ep_square + down)
+                description['en_passant']['square'] = self._get_en_passant_square()
                 description['capture']['piece'] = 'p' # Always capturing a pawn
             else:
                 description['capture']['piece'] = self._board.piece_at(move.to_square).symbol().lower()
@@ -311,6 +322,38 @@ class Game:
             raise ValueError(f"Invalid color '{color}': expected one of ('w', 'b').")
         else:
             return BLACK if color == WHITE else WHITE
+
+    def _update_initial_pos_dict(self, move, side) -> None:
+        """Updates the square to initial position dict."""
+        to = chess.square_name(move.to_square)
+        from_ = chess.square_name(move.from_square)
+
+        # update the dictionary
+        self._initial_pos_dict[to] = self._initial_pos_dict[from_]
+        del(self._initial_pos_dict[from_])
+
+        # if taking, then should remove piece from dict, which already happens
+
+        # check if castling to update rook
+        if self._board.is_castling(move):
+            if self._board.is_kingside_castling(move):
+                # rook must be on file h because hasn't moved
+                old_rook_pos = 'h1' if side == WHITE else 'h8'
+                new_rook_pos = 'f1' if side == WHITE else 'f8'
+                self._initial_pos_dict[new_rook_pos] = old_rook_pos
+                del(self._initial_pos_dict[old_rook_pos])
+            else:
+                # queenside castling
+                # rook must be on file a because hasn't moved
+                old_rook_pos = 'a1' if side == WHITE else 'a8'
+                new_rook_pos = 'd1' if side == WHITE else 'd8'
+                self._initial_pos_dict[new_rook_pos] = old_rook_pos
+                del(self._initial_pos_dict[old_rook_pos])
+
+        # check if en_passant
+        if self._board.is_en_passant(move):
+            en_passant_square = self._get_en_passant_square()
+            del self._initial_pos_dict[en_passant_square]
 
     def move(self, san) -> dict:
         """Makes a requested move on the internal board.
@@ -341,6 +384,9 @@ class Game:
         # Clear any draw offers made by either player
         for side in (WHITE, BLACK):
             self.decline_draw(side=side)
+
+        # Update piece to initial position dict
+        self._update_initial_pos_dict(move, self.turn)
 
         # Construct the extended move description (adding a SAN field)
         # HACK: For logical purposes, it makes most sense for the SAN notation of the move
@@ -592,6 +638,7 @@ class Game:
         game._plies = input_dict['ply_count']
         game._resigned = input_dict['resigned']
         game._draw_offers = input_dict['draw_offers']
+        game._initial_pos_dict = input_dict['initial_pos_dict']
 
         return game
 
@@ -603,21 +650,22 @@ class Game:
         """
 
         return {
-            'id':             self.id,
-            'creator':        self.creator,
-            'players':        self.players,
-            'free_slots':     self.free_slots,
-            'time_controls':  self.time_controls,
-            'remaining_time': self.remaining_time,
-            'resigned':       self.resigned,
-            'draw_offers':    self.draw_offers,
-            'in_progress':    self.in_progress,
-            'result':         self.result,
-            'game_over':      self.game_over,
-            'turn':           self.turn,
-            'ply_count':      self.ply_count,
-            'move_count':     self.move_count,
-            'pgn':            self.pgn,
-            'history':        self.history,
-            'fen':            self.fen
+            'id':               self.id,
+            'creator':          self.creator,
+            'players':          self.players,
+            'free_slots':       self.free_slots,
+            'time_controls':    self.time_controls,
+            'remaining_time':   self.remaining_time,
+            'resigned':         self.resigned,
+            'draw_offers':      self.draw_offers,
+            'in_progress':      self.in_progress,
+            'result':           self.result,
+            'game_over':        self.game_over,
+            'turn':             self.turn,
+            'ply_count':        self.ply_count,
+            'move_count':       self.move_count,
+            'pgn':              self.pgn,
+            'history':          self.history,
+            'fen':              self.fen,
+            'initial_pos_dict': self.initial_pos_dict
         }
