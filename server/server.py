@@ -10,6 +10,8 @@ from schemas.controller import ControllerRegisterInput, ControllerPollInput
 from .game import Game
 import google.cloud
 from google.cloud import firestore
+import firebase_admin
+from firebase_admin import credentials
 
 # because Heroku uses an ephemeral file system (https://devcenter.heroku.com/articles/active-storage-on-heroku)
 # we need to write the key that is stored in FIREBASE_SERVICE_ACCOUNT_JSON to a file
@@ -29,6 +31,9 @@ if os.environ.get("CI", None) != "true":
 else:
     # reassigned by a mock object
     db = None
+
+cred = credentials.Certificate(ACCOUNT_JSON_FILENAME)
+default_app = firebase_admin.initialize_app(cred)
 
 GAMES_COLLECTION = "games"
 CONTROLLER_COLLECTION = "controllers"
