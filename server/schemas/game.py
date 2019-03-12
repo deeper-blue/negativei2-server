@@ -6,10 +6,17 @@ AI = "AI"
 USER_COLLECTION = "users"
 GAME_COLLECTION = "games"
 
-def assert_player_exists(player, db):
+'''def assert_player_exists(player, db):
     """Helper function that checks if a given player id exists in db"""
     user_ref = db.collection(USER_COLLECTION).document(player).get()
     if not user_ref.exists:
+        raise ValidationError(f'User {player} doesn\'t exist!')'''
+
+def assert_player_exists(player, db):
+    """Helper function that checks if a given player id exists in db"""
+    auth = Firebase.auth()
+    #user_ref = auth.getUser(player);
+    if not auth.getUser(player).exists:
         raise ValidationError(f'User {player} doesn\'t exist!')
 
 class MakeMoveInput(Schema):
@@ -88,11 +95,11 @@ class CreateGameInput(Schema):
         if value == OPEN_SLOT or value == AI:
             return
 
-        assert_player_exists(value, self.db)
+        assert_player_exists(value)
 
     @validates('creator_id')
     def creator_exists(self, value):
-        assert_player_exists(value, self.db)
+        assert_player_exists(value)
 
 class JoinGameInput(Schema):
     # ID of the game to join
@@ -114,7 +121,7 @@ class JoinGameInput(Schema):
 
     @validates('player_id')
     def player_exists(self, value):
-        assert_player_exists(value, self.db)
+        assert_player_exists(value)
 
     @validates('side')
     def validate_side(self, value):
@@ -142,7 +149,7 @@ class DrawOfferInput(Schema):
         game = Game.from_dict(game_ref.to_dict())
 
         # Check if user exists
-        assert_player_exists(data['user_id'], self.db)
+        assert_player_exists(data['user_id'])
 
         # Check if user is one of the players of the game
         if data['user_id'] not in game.players.values():
