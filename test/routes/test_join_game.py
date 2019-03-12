@@ -3,7 +3,7 @@ import unittest
 from unittest.mock import patch
 from server.server import app
 from server.server import GAMES_COLLECTION
-from .mock_firebase import MockClient
+from .mock_firebase import MockClient, MockAuth
 
 TWO_FREE_SLOTS = {"creator": "some_creator",
                   "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
@@ -30,6 +30,8 @@ TWO_FREE_SLOTS = {"creator": "some_creator",
 OK = 200
 BAD_REQUEST = 400
 
+@patch('firebase_admin.auth', new_callable=MockAuth)
+@patch('server.server.db', new_callable=MockClient)
 class JoinGameTest(unittest.TestCase):
 
     @classmethod
@@ -47,12 +49,12 @@ class JoinGameTest(unittest.TestCase):
         """
         return self.client.post(self.route, data=data)
 
-    def set_up_mock_db(self, mock_db):
+    def set_up_mock(self, mock_db, mock_auth):
         mock_db.collection(GAMES_COLLECTION).add(TWO_FREE_SLOTS, document_id="two_free_slots")
-        mock_db.collection("users").add({}, document_id="new_player")
-        mock_db.collection("users").add({}, document_id="player1")
-        mock_db.collection("users").add({}, document_id="player2")
-        mock_db.collection("users").add({}, document_id="some_creator")
+        mock_auth._mock_add_user("new_player")
+        mock_auth._mock_add_user("player1")
+        mock_auth._mock_add_user("player2")
+        mock_auth._mock_add_user("some_creator")
 
         full_player_ids = copy.deepcopy(TWO_FREE_SLOTS)
         full_player_ids["players"]["w"] = "player1"
@@ -70,20 +72,18 @@ class JoinGameTest(unittest.TestCase):
                 "player_id": "new_player",
                 "side": "w"}
 
-    @patch('server.server.db', new_callable=MockClient)
-    def test_join_as_white(self, mock_db):
+    def test_join_as_white(self, mock_db, mock_auth):
         """Should be able to join a game with a free white slot as white"""
-        self.set_up_mock_db(mock_db)
+        self.set_up_mock(mock_db, mock_auth)
         params = self.create_dummy_params()
         response = self.post(params)
         self.assertEqual(OK, response.status_code)
         game = mock_db.collection(GAMES_COLLECTION).document("two_free_slots").get().to_dict()
         self.assertEqual("new_player", game["players"]["w"])
 
-    @patch('server.server.db', new_callable=MockClient)
-    def test_join_as_black(self, mock_db):
+    def test_join_as_black(self, mock_db, mock_auth):
         """Should be able to join a game with a free black slot as black"""
-        self.set_up_mock_db(mock_db)
+        self.set_up_mock(mock_db, mock_auth)
         params = self.create_dummy_params()
         params["side"] = "b"
         response = self.post(params)
@@ -91,46 +91,41 @@ class JoinGameTest(unittest.TestCase):
         game = mock_db.collection(GAMES_COLLECTION).document("two_free_slots").get().to_dict()
         self.assertEqual("new_player", game["players"]["b"])
 
-    @patch('server.server.db', new_callable=MockClient)
-    def test_join_slot_contains_player_id(self, mock_db):
+    def test_join_slot_contains_player_id(self, mock_db, mock_auth):
         """Should not be able to join a game when requested slot full"""
-        self.set_up_mock_db(mock_db)
+        self.set_up_mock(mock_db, mock_auth)
         params = self.create_dummy_params()
         params["game_id"] = "full_player_ids"
         response = self.post(params)
         self.assertEqual(BAD_REQUEST, response.status_code)
 
-    @patch('server.server.db', new_callable=MockClient)
-    def test_join_slot_contains_ai(self, mock_db):
+    def test_join_slot_contains_ai(self, mock_db, mock_auth):
         """Should not be able to join a game when requested slot full"""
-        self.set_up_mock_db(mock_db)
+        self.set_up_mock(mock_db, mock_auth)
         params = self.create_dummy_params()
         params["game_id"] = "full_ai"
         response = self.post(params)
         self.assertEqual(BAD_REQUEST, response.status_code)
 
-    @patch('server.server.db', new_callable=MockClient)
-    def test_join_slot_invalid_player_id(self, mock_db):
+    def test_join_slot_invalid_player_id(self, mock_db, mock_auth):
         """Should not be able to join a game when not valid player ID"""
-        self.set_up_mock_db(mock_db)
+        self.set_up_mock(mock_db, mock_auth)
         params = self.create_dummy_params()
         params["player_id"] = "invalid_player_id"
         response = self.post(params)
         self.assertEqual(BAD_REQUEST, response.status_code)
 
-    @patch('server.server.db', new_callable=MockClient)
-    def test_join_slot_invalid_game_id(self, mock_db):
+    def test_join_slot_invalid_game_id(self, mock_db, mock_auth):
         """Should not be able to join a game when not valid game ID"""
-        self.set_up_mock_db(mock_db)
+        self.set_up_mock(mock_db, mock_auth)
         params = self.create_dummy_params()
         params["game_id"] = "invalid_game_id"
         response = self.post(params)
         self.assertEqual(BAD_REQUEST, response.status_code)
 
-    @patch('server.server.db', new_callable=MockClient)
-    def test_side_not_provided(self, mock_db):
+    def test_side_not_provided(self, mock_db, mock_auth):
         """Should be able to join a game without providing a side to join"""
-        self.set_up_mock_db(mock_db)
+        self.set_up_mock(mock_db, mock_auth)
         params = self.create_dummy_params()
         del params["side"]
         response = self.post(params)
