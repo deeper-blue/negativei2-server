@@ -74,7 +74,7 @@ class Game:
             BLACK: {'made': False, 'accepted': False}
         }
         # generate all positions that initially contain pieces to track pieces
-        self._initial_pos_dict = {sq: sq for sq in product(chess.FILE_NAMES, ['1', '2', '7', '8'])}
+        self._initial_pos_dict = {''.join(sq): ''.join(sq) for sq in product(chess.FILE_NAMES, ['1', '2', '7', '8'])}
 
     @property
     def id(self) -> str:
@@ -246,6 +246,13 @@ class Game:
         down = -8 if self.turn == WHITE else 8
         return chess.square_name(self._board.ep_square + down)
 
+    def _get_initial_pos_piece(self, move) -> str:
+        """Given a move, gets the initial position of the piece that moved
+
+        Assumes that _update_initial_pos_dict has already been called.
+        """
+        return self.initial_pos_dict[chess.square_name(move.to_square)]
+
     def _construct_move_description(self, move) -> dict:
         """Constructs an extended move description for a single move, detailing all necessary information about the move.
 
@@ -272,6 +279,7 @@ class Game:
             'ply_count': self.ply_count,
             'move_count': self.move_count,
             'piece': self._board.piece_at(move.from_square).symbol().lower(),
+            'initial_pos_piece': self._get_initial_pos_piece(move),
             'from': chess.square_name(move.from_square),
             'to': chess.square_name(move.to_square),
             'promotion': {
@@ -374,6 +382,9 @@ class Game:
         if self.players[self.turn] is None:
             raise RuntimeError(f"Cannot make move '{san}' for side '{self.turn}': No player found.")
 
+        # Update piece to initial position dict
+        self._update_initial_pos_dict(self._board.parse_san(san), self.turn)
+
         # Make the move on the internal board
         # NOTE: At this point, self._board.push_san() raises a ValueError if the SAN is invalid in the current context.
         move = self._board.push_san(san)
@@ -384,9 +395,6 @@ class Game:
         # Clear any draw offers made by either player
         for side in (WHITE, BLACK):
             self.decline_draw(side=side)
-
-        # Update piece to initial position dict
-        self._update_initial_pos_dict(move, self.turn)
 
         # Construct the extended move description (adding a SAN field)
         # HACK: For logical purposes, it makes most sense for the SAN notation of the move
