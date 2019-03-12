@@ -12,7 +12,7 @@ GAME_COLLECTION = "games"
     if not user_ref.exists:
         raise ValidationError(f'User {player} doesn\'t exist!')'''
 
-def assert_player_exists(player, db):
+def assert_player_exists(player):
     """Helper function that checks if a given player id exists in db"""
     auth = Firebase.auth()
     #user_ref = auth.getUser(player);
