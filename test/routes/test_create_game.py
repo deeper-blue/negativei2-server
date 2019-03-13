@@ -6,11 +6,13 @@ import pytest
 from unittest.mock import patch
 from server.server import app
 from server.game import WHITE, BLACK
-from .mock_firebase import MockClient
+from .mock_firebase import MockClient, MockAuth
 
 OK          = 200
 BAD_REQUEST = 400
 
+@patch('firebase_admin.auth', new_callable=MockAuth)
+@patch('server.server.db', new_callable=MockClient)
 class CreateGameTest(unittest.TestCase):
     # Setup and helper functions
 
@@ -37,34 +39,31 @@ class CreateGameTest(unittest.TestCase):
                 "time_per_player": 60 * 60, # 1 hour per player
                 "board_id": 0}
 
-    def set_up_mock_db(self, mock_db):
+    def set_up_mock(self, mock_db, mock_auth):
         """Creates some entries in the mock database"""
-        mock_db.collection("users").add({}, document_id="some_creator")
+        mock_auth._mock_add_user("some_creator")
 
-    @patch('server.server.db', new_callable=MockClient)
-    def test_invalid_creator_id(self, mock_db):
+    def test_invalid_creator_id(self, mock_db, mock_auth):
         """An invalid creator ID should error"""
-        self.set_up_mock_db(mock_db)
+        self.set_up_mock(mock_db, mock_auth)
         params = self.create_dummy_params()
         params["creator_id"] = "definitelyinvalidID"
         response = self.post(params)
         print(response)
         self.assertEqual(BAD_REQUEST, response.status_code)
 
-    @patch('server.server.db', new_callable=MockClient)
-    def test_invalid_player_id(self, mock_db):
+    def test_invalid_player_id(self, mock_db, mock_auth):
         """An invalid player ID should error"""
-        self.set_up_mock_db(mock_db)
+        self.set_up_mock(mock_db, mock_auth)
         params = self.create_dummy_params()
         params["player1_id"] = "definitelyinvalidID"
         response = self.post(params)
         print(response)
         self.assertEqual(BAD_REQUEST, response.status_code)
 
-    @patch('server.server.db', new_callable=MockClient)
-    def test_negative_time_per_player(self, mock_db):
+    def test_negative_time_per_player(self, mock_db, mock_auth):
         """Having negative time_per_player should error"""
-        self.set_up_mock_db(mock_db)
+        self.set_up_mock(mock_db, mock_auth)
         params = self.create_dummy_params()
         params["time_per_player"] = -500
         response = self.post(params)
@@ -72,12 +71,11 @@ class CreateGameTest(unittest.TestCase):
         self.assertEqual(BAD_REQUEST, response.status_code)
 
     @pytest.mark.xfail
-    @patch('server.server.db', new_callable=MockClient)
-    def test_create_two_games_same_board_id(self, mock_db):
+    def test_create_two_games_same_board_id(self, mock_db, mock_auth):
         """Creating two games that both use the same board_id should error
            Each board can only host 1 game at a time
         """
-        self.set_up_mock_db(mock_db)
+        self.set_up_mock(mock_db, mock_auth)
         params = self.create_dummy_params()
         response = self.post(params)
         self.assertEqual(OK, response.status_code)
@@ -85,12 +83,11 @@ class CreateGameTest(unittest.TestCase):
         response = self.post(params)
         self.assertEqual(BAD_REQUEST, response.status_code)
 
-    @patch('server.server.db', new_callable=MockClient)
-    def test_create_game_object_sensible(self, mock_db):
+    def test_create_game_object_sensible(self, mock_db, mock_auth):
         """The fields in the returned object have some values
            that need to be there.
         """
-        self.set_up_mock_db(mock_db)
+        self.set_up_mock(mock_db, mock_auth)
         params = self.create_dummy_params()
         response = self.post(params)
         json_game = json.loads(response.data)
@@ -112,12 +109,11 @@ class CreateGameTest(unittest.TestCase):
         # check history
         self.assertListEqual([], json_game["history"])
 
-    @patch('server.server.db', new_callable=MockClient)
-    def test_create_then_get_game(self, mock_db):
+    def test_create_then_get_game(self, mock_db, mock_auth):
         """Creating a game then getting the same game_id should return
            the same object.
         """
-        self.set_up_mock_db(mock_db)
+        self.set_up_mock(mock_db, mock_auth)
         params = self.create_dummy_params()
         response = self.post(params)
         self.assertEqual(OK, response.status_code)

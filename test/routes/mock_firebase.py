@@ -5,6 +5,30 @@ import copy
 from collections import defaultdict
 from unittest.mock import MagicMock
 
+# firebase_admin mocks
+
+class MockAuth(MagicMock):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.users = {}
+
+    def get_user(self, user_id):
+        """https://firebase.google.com/docs/reference/admin/python/firebase_admin.auth#get_user"""
+        try:
+            return copy.deepcopy(self.users[user_id])
+        except:
+            raise self.AuthError("User doesn't exist")
+
+    def _mock_add_user(self, user_id, data={}):
+        """Helper function to add a user for setting up mock"""
+        self.users[user_id] = copy.deepcopy(data)
+
+    class AuthError(Exception):
+        """https://firebase.google.com/docs/reference/admin/python/firebase_admin.auth#firebase_admin.auth.AuthError"""
+        pass
+
+# firestore mocks
+
 class MockClient(MagicMock):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -45,7 +69,7 @@ class MockDocumentReference(MagicMock):
         self.id = id_
 
     def to_dict(self):
-        return self.data
+        return copy.deepcopy(self.data)
 
     def get(self):
         return self
