@@ -69,7 +69,7 @@ class MockDocumentReference(MagicMock):
         self.id = id_
 
     def to_dict(self):
-        return self.data
+        return copy.deepcopy(self.data)
 
     def get(self):
         return self
