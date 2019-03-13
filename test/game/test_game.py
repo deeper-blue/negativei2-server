@@ -710,7 +710,7 @@ class GameTest(unittest.TestCase):
         """Construct move description of a move which is on the top of the move stack."""
         san = 'Nc3'
         # need to update the internal position dict
-        self.game_wpt._update_initial_pos_dict(self.game_wpt.board.parse_san(san), self.game_wpt.turn)
+        self.game_wpt._update_initial_positions(self.game_wpt.board.parse_san(san), self.game_wpt.turn)
         move = self.game_wpt.board.push_san(san)
 
         # Check that the move stack manipulation done by the function is okay

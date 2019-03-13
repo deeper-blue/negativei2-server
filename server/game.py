@@ -15,20 +15,24 @@ class Game:
     """Class representing and encapsulating the logic required for handling a chess game with time controls.
 
     Internal attributes (Do not modify or access directly):
-        _id:             The assigned ID of the Game object (not the Python-assigned one).
-        _creator:        The ID of the user that created the game.
-        _time_controls:  The time controls for the game (starting time for each side) in seconds.
-        _remaining_time: The remaining time for both sides.
-        _board:          The internal board object for the game.
-        _players:        The sides of the game and their corresponding players.
-        _plies:          The ply count (version number).
-        _history:        The game move history.
-        _resigned:       The resignation status for both sides.
-        _draw_offers:    The draw offer status for both sides.
+        _id:                The assigned ID of the Game object (not the Python-assigned one).
+        _creator:           The ID of the user that created the game.
+        _time_controls:     The time controls for the game (starting time for each side) in seconds.
+        _remaining_time:    The remaining time for both sides.
+        _board:             The internal board object for the game.
+        _players:           The sides of the game and their corresponding players.
+        _plies:             The ply count (version number).
+        _history:           The game move history.
+        _resigned:          The resignation status for both sides.
+        _draw_offers:       The draw offer status for both sides.
             MEANING:
                 _draw_offers[WHITE]['made']     represents whether white has made a draw offer or not.
                 _draw_offers[WHITE]['accepted'] represents whether white's draw offer had been accepted by black.
                                                 and vice-versa for black.
+        _initial_positions: A dictionary mapping squares with pieces to the square that piece started.
+            For example:
+                If you move the e2 pawn to e4, then there will be an entry "e4": "e2" since the pawn in
+                square e4 was initially at e2.
 
     Properties:
         The internal attributes listed above can be accessed through properties defined in this class.
@@ -73,8 +77,8 @@ class Game:
             WHITE: {'made': False, 'accepted': False},
             BLACK: {'made': False, 'accepted': False}
         }
-        # generate all positions that initially contain pieces to track pieces
-        self._initial_pos_dict = {''.join(sq): ''.join(sq) for sq in product(chess.FILE_NAMES, ['1', '2', '7', '8'])}
+
+        self._initial_positions = {''.join(sq): ''.join(sq) for sq in product(chess.FILE_NAMES, ['1', '2', '7', '8'])}
 
     @property
     def id(self) -> str:
@@ -232,8 +236,8 @@ class Game:
         return {'game_over': False, 'reason': None}
 
     @property
-    def initial_pos_dict(self) -> dict:
-        return self._initial_pos_dict
+    def initial_positions(self) -> dict:
+        return self._initial_positions
 
     def _get_en_passant_square(self) -> str:
         """If an en passant move was just made, this returns the square of the captured piece"""
@@ -245,9 +249,9 @@ class Game:
     def _get_initial_pos_piece(self, move) -> str:
         """Given a move, gets the initial position of the piece that moved
 
-        Assumes that _update_initial_pos_dict has already been called.
+        Assumes that _update_initial_positions has already been called.
         """
-        return self.initial_pos_dict[chess.square_name(move.to_square)]
+        return self.initial_positions[chess.square_name(move.to_square)]
 
     def _construct_move_description(self, move) -> dict:
         """Constructs an extended move description for a single move, detailing all necessary information about the move.
@@ -327,37 +331,39 @@ class Game:
         else:
             return BLACK if color == WHITE else WHITE
 
-    def _update_initial_pos_dict(self, move, side) -> None:
+    def _update_initial_positions(self, move, side) -> None:
         """Updates the square to initial position dict."""
         to = chess.square_name(move.to_square)
         from_ = chess.square_name(move.from_square)
 
         # update the dictionary
-        self._initial_pos_dict[to] = self._initial_pos_dict[from_]
-        del(self._initial_pos_dict[from_])
+        self._initial_positions[to] = self._initial_positions[from_]
+        del(self._initial_positions[from_])
 
         # if taking, then should remove piece from dict, which already happens
 
         # check if castling to update rook
         if self._board.is_castling(move):
+            rank = '1' if side == WHITE else '8'
+
             if self._board.is_kingside_castling(move):
                 # rook must be on file h because hasn't moved
-                old_rook_pos = 'h1' if side == WHITE else 'h8'
-                new_rook_pos = 'f1' if side == WHITE else 'f8'
-                self._initial_pos_dict[new_rook_pos] = old_rook_pos
-                del(self._initial_pos_dict[old_rook_pos])
+                old_rook_pos = 'h' + rank
+                new_rook_pos = 'f' + rank
+                self._initial_positions[new_rook_pos] = old_rook_pos
+                del(self._initial_positions[old_rook_pos])
             else:
                 # queenside castling
                 # rook must be on file a because hasn't moved
-                old_rook_pos = 'a1' if side == WHITE else 'a8'
-                new_rook_pos = 'd1' if side == WHITE else 'd8'
-                self._initial_pos_dict[new_rook_pos] = old_rook_pos
-                del(self._initial_pos_dict[old_rook_pos])
+                old_rook_pos = 'a' + rank
+                new_rook_pos = 'd' + rank
+                self._initial_positions[new_rook_pos] = old_rook_pos
+                del(self._initial_positions[old_rook_pos])
 
         # check if en_passant
         if self._board.is_en_passant(move):
             en_passant_square = self._get_en_passant_square()
-            del self._initial_pos_dict[en_passant_square]
+            del self._initial_positions[en_passant_square]
 
     def move(self, san) -> dict:
         """Makes a requested move on the internal board.
@@ -378,11 +384,15 @@ class Game:
         if self.players[self.turn] is None:
             raise RuntimeError(f"Cannot make move '{san}' for side '{self.turn}': No player found.")
 
+        # copy the board to validate the move without affecting state
+        # NOTE: At this point, validate_board.push_san() raises a ValueError if the SAN is invalid in the current context.
+        validate_board = self._board.copy(stack=False)
+        validate_board.push_san(san)
+
         # Update piece to initial position dict
-        self._update_initial_pos_dict(self._board.parse_san(san), self.turn)
+        self._update_initial_positions(self._board.parse_san(san), self.turn)
 
         # Make the move on the internal board
-        # NOTE: At this point, self._board.push_san() raises a ValueError if the SAN is invalid in the current context.
         move = self._board.push_san(san)
 
         # Increment ply count after move is successfully made
@@ -611,7 +621,7 @@ class Game:
 
     @classmethod
     def from_dict(cls, input_dict):
-        required_keys = ['id', 'creator', 'players', 'time_controls', 'history', 'remaining_time', 'ply_count', 'resigned', 'draw_offers']
+        required_keys = ['id', 'creator', 'players', 'time_controls', 'history', 'remaining_time', 'ply_count', 'resigned', 'draw_offers', 'initial_positions']
         missing_keys = []
 
         # Check for any missing keys
@@ -642,7 +652,7 @@ class Game:
         game._plies = input_dict['ply_count']
         game._resigned = input_dict['resigned']
         game._draw_offers = input_dict['draw_offers']
-        game._initial_pos_dict = input_dict['initial_pos_dict']
+        game._initial_positions = input_dict['initial_positions']
 
         return game
 
@@ -654,22 +664,22 @@ class Game:
         """
 
         return {
-            'id':               self.id,
-            'creator':          self.creator,
-            'players':          self.players,
-            'free_slots':       self.free_slots,
-            'time_controls':    self.time_controls,
-            'remaining_time':   self.remaining_time,
-            'resigned':         self.resigned,
-            'draw_offers':      self.draw_offers,
-            'in_progress':      self.in_progress,
-            'result':           self.result,
-            'game_over':        self.game_over,
-            'turn':             self.turn,
-            'ply_count':        self.ply_count,
-            'move_count':       self.move_count,
-            'pgn':              self.pgn,
-            'history':          self.history,
-            'fen':              self.fen,
-            'initial_pos_dict': self.initial_pos_dict
+            'id':                   self.id,
+            'creator':              self.creator,
+            'players':              self.players,
+            'free_slots':           self.free_slots,
+            'time_controls':        self.time_controls,
+            'remaining_time':       self.remaining_time,
+            'resigned':             self.resigned,
+            'draw_offers':          self.draw_offers,
+            'in_progress':          self.in_progress,
+            'result':               self.result,
+            'game_over':            self.game_over,
+            'turn':                 self.turn,
+            'ply_count':            self.ply_count,
+            'move_count':           self.move_count,
+            'pgn':                  self.pgn,
+            'history':              self.history,
+            'fen':                  self.fen,
+            'initial_positions':    self.initial_positions
         }
