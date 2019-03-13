@@ -50,7 +50,8 @@ class ResignTest(unittest.TestCase):
             'move_count': 1,
             'pgn': '',
             'history': [],
-            'fen': 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
+            'fen': 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+            'initial_positions': {'a1': 'a1', 'a2': 'a2', 'a7': 'a7', 'a8': 'a8', 'b1': 'b1', 'b2': 'b2', 'b7': 'b7', 'b8': 'b8', 'c1': 'c1', 'c2': 'c2', 'c7': 'c7', 'c8': 'c8', 'd1': 'd1', 'd2': 'd2', 'd7': 'd7', 'd8': 'd8', 'e1': 'e1', 'e2': 'e2', 'e7': 'e7', 'e8': 'e8', 'f1': 'f1', 'f2': 'f2', 'f7': 'f7', 'f8': 'f8', 'g1': 'g1', 'g2': 'g2', 'g7': 'g7', 'g8': 'g8', 'h1': 'h1', 'h2': 'h2', 'h7': 'h7', 'h8': 'h8'}
         }
 
     def fill_params(self, game_id=None, user_id=None):

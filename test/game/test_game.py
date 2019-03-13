@@ -197,6 +197,7 @@ class GameTest(unittest.TestCase):
                 'ply_count': 1,
                 'move_count': 1,
                 'piece': 'p',
+                'initial_pos_piece': 'f2',
                 'from': 'f2',
                 'to': 'f3',
                 'promotion': {'promotion': False, 'piece': None},
@@ -210,6 +211,7 @@ class GameTest(unittest.TestCase):
                 'ply_count': 2,
                 'move_count': 1,
                 'piece': 'p',
+                'initial_pos_piece': 'e7',
                 'from': 'e7',
                 'to': 'e5',
                 'promotion': {'promotion': False, 'piece': None},
@@ -223,6 +225,7 @@ class GameTest(unittest.TestCase):
                 'ply_count': 3,
                 'move_count': 2,
                 'piece': 'p',
+                'initial_pos_piece': 'g2',
                 'from': 'g2',
                 'to': 'g4',
                 'promotion': {'promotion': False, 'piece': None},
@@ -236,6 +239,7 @@ class GameTest(unittest.TestCase):
                 'ply_count': 4,
                 'move_count': 2,
                 'piece': 'q',
+                'initial_pos_piece': 'd8',
                 'from': 'd8',
                 'to': 'h4',
                 'promotion': {'promotion': False, 'piece': None},
@@ -704,7 +708,10 @@ class GameTest(unittest.TestCase):
 
     def test_construct_move_description_correct_move(self):
         """Construct move description of a move which is on the top of the move stack."""
-        move = self.game_wpt.board.push_san('Nc3')
+        san = 'Nc3'
+        # need to update the internal position dict
+        self.game_wpt._update_initial_positions(self.game_wpt.board.parse_san(san), self.game_wpt.turn)
+        move = self.game_wpt.board.push_san(san)
 
         # Check that the move stack manipulation done by the function is okay
         self.assertEqual(self.game_wpt.board.peek(), move)
@@ -717,6 +724,7 @@ class GameTest(unittest.TestCase):
             'ply_count': 0,
             'move_count': 1,
             'piece': 'n',
+            'initial_pos_piece': 'b1',
             'from': 'b1',
             'to': 'c3',
             'promotion': {'promotion': False, 'piece': None},
