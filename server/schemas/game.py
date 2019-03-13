@@ -1,15 +1,16 @@
 from marshmallow import Schema, fields, validates, validates_schema, ValidationError
 from server.game import Game
+import firebase_admin.auth
 
 OPEN_SLOT = "OPEN"
 AI = "AI"
-USER_COLLECTION = "users"
 GAME_COLLECTION = "games"
 
-def assert_player_exists(player, db):
-    """Helper function that checks if a given player id exists in db"""
-    user_ref = db.collection(USER_COLLECTION).document(player).get()
-    if not user_ref.exists:
+def assert_player_exists(player):
+    """Helper function that checks if a given player id exists in firebase authentication"""
+    try:
+        firebase_admin.auth.get_user(player)
+    except firebase_admin.auth.AuthError:
         raise ValidationError(f'User {player} doesn\'t exist!')
 
 class MakeMoveInput(Schema):
@@ -38,9 +39,7 @@ class MakeMoveInput(Schema):
         if data['user_id'] == OPEN_SLOT or data['user_id'] == AI:
             pass
         else:
-            user_ref = self.db.collection(USER_COLLECTION).document(data['user_id']).get()
-            if not user_ref.exists:
-                raise ValidationError(f"User {data['user_id']} doesn\'t exist!")
+            assert_player_exists(data['user_id'])
 
         # Check if user is one of the players of the game
         if data['user_id'] not in game.players.values():
@@ -88,11 +87,11 @@ class CreateGameInput(Schema):
         if value == OPEN_SLOT or value == AI:
             return
 
-        assert_player_exists(value, self.db)
+        assert_player_exists(value)
 
     @validates('creator_id')
     def creator_exists(self, value):
-        assert_player_exists(value, self.db)
+        assert_player_exists(value)
 
 class JoinGameInput(Schema):
     # ID of the game to join
@@ -114,7 +113,7 @@ class JoinGameInput(Schema):
 
     @validates('player_id')
     def player_exists(self, value):
-        assert_player_exists(value, self.db)
+        assert_player_exists(value)
 
     @validates('side')
     def validate_side(self, value):
@@ -142,7 +141,7 @@ class DrawOfferInput(Schema):
         game = Game.from_dict(game_ref.to_dict())
 
         # Check if user exists
-        assert_player_exists(data['user_id'], self.db)
+        assert_player_exists(data['user_id'])
 
         # Check if user is one of the players of the game
         if data['user_id'] not in game.players.values():
@@ -173,7 +172,7 @@ class RespondOfferInput(Schema):
         game = Game.from_dict(game_ref.to_dict())
 
         # Check if user exists
-        assert_player_exists(data['user_id'], self.db)
+        assert_player_exists(data['user_id'])
 
         # Check if user is one of the players of the game
         if data['user_id'] not in game.players.values():
@@ -200,7 +199,7 @@ class ResignInput(Schema):
         game = Game.from_dict(game_ref.to_dict())
 
         # Check if user exists
-        assert_player_exists(data['user_id'], self.db)
+        assert_player_exists(data['user_id'])
 
         # Check if user is one of the players of the game
         if data['user_id'] not in game.players.values():

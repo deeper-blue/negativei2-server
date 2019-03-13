@@ -5,11 +5,13 @@ import pytest
 import json
 from server.server import app
 from unittest.mock import patch
-from .mock_firebase import MockClient
+from .mock_firebase import MockClient, MockAuth
 
 OK          = 200
 BAD_REQUEST = 400
 
+@patch('firebase_admin.auth', new_callable=MockAuth)
+@patch('server.server.db', new_callable=MockClient)
 class RespondOfferTest(unittest.TestCase):
     # Setup and helper functions
 
@@ -59,59 +61,53 @@ class RespondOfferTest(unittest.TestCase):
         self.params['user_id'] = user_id
         self.params['response'] = response
 
-    def set_up_mock_db(self, mock_db):
+    def set_up_mock(self, mock_db, mock_auth):
         """Creates some entries in the mock database"""
-        mock_db.collection("users").add({}, document_id='some_creator')
-        mock_db.collection("users").add({}, document_id='some_player_1')
-        mock_db.collection("users").add({}, document_id='some_player_2')
+        mock_auth._mock_add_user("some_creator")
+        mock_auth._mock_add_user("some_player_1")
+        mock_auth._mock_add_user("some_player_2")
         mock_db.collection("games").add(self.mock_game, document_id='some_game')
 
     # Tests
 
-    @patch('server.server.db', new_callable=MockClient)
-    def test_game_doesnt_exist(self, mock_db):
+    def test_game_doesnt_exist(self, mock_db, mock_auth):
         """Respond to a draw offer on a game that doesn't exist."""
-        self.set_up_mock_db(mock_db)
+        self.set_up_mock(mock_db, mock_auth)
         self.fill_params(game_id='game_that_doesnt_exist', user_id='some_player_1', response=True)
         response = self.post(self.params)
         self.assertEqual(BAD_REQUEST, response.status_code)
 
-    @patch('server.server.db', new_callable=MockClient)
-    def test_game_exists(self, mock_db):
+    def test_game_exists(self, mock_db, mock_auth):
         """Respond to a draw offer on a game that exists."""
-        self.set_up_mock_db(mock_db)
+        self.set_up_mock(mock_db, mock_auth)
         self.fill_params(game_id='some_game', user_id='some_player_1', response=True)
         response = self.post(self.params)
         self.assertEqual(OK, response.status_code)
 
-    @patch('server.server.db', new_callable=MockClient)
-    def test_user_id_doesnt_exist(self, mock_db):
+    def test_user_id_doesnt_exist(self, mock_db, mock_auth):
         """Respond to a draw offer with the ID of a user that doesn't exist."""
-        self.set_up_mock_db(mock_db)
+        self.set_up_mock(mock_db, mock_auth)
         self.fill_params(game_id='some_game', user_id='user_that_doesnt_exist', response=True)
         response = self.post(self.params)
         self.assertEqual(BAD_REQUEST, response.status_code)
 
-    @patch('server.server.db', new_callable=MockClient)
-    def test_user_not_in_game(self, mock_db):
+    def test_user_not_in_game(self, mock_db, mock_auth):
         """Respond to a draw offer with the ID of a user that exists, but isn't a player in the game."""
-        self.set_up_mock_db(mock_db)
+        self.set_up_mock(mock_db, mock_auth)
         self.fill_params(game_id='some_game', user_id='some_creator', response=True)
         response = self.post(self.params)
         self.assertEqual(BAD_REQUEST, response.status_code)
 
-    @patch('server.server.db', new_callable=MockClient)
-    def test_offer_accepted(self, mock_db):
+    def test_offer_accepted(self, mock_db, mock_auth):
         """Check that a draw offer is actually accepted."""
-        self.set_up_mock_db(mock_db)
+        self.set_up_mock(mock_db, mock_auth)
         self.fill_params(game_id='some_game', user_id='some_player_2', response=True)
         response = json.loads(self.post(self.params).data)
         self.assertEqual(response['draw_offers']['w']['accepted'], True)
 
-    @patch('server.server.db', new_callable=MockClient)
-    def test_offer_declined(self, mock_db):
+    def test_offer_declined(self, mock_db, mock_auth):
         """Check that a draw offer is actually declined (and the made field is reset)."""
-        self.set_up_mock_db(mock_db)
+        self.set_up_mock(mock_db, mock_auth)
         self.fill_params(game_id='some_game', user_id='some_player_2', response=False)
         response = json.loads(self.post(self.params).data)
         self.assertEqual(response['draw_offers']['w']['made'], False)
