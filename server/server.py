@@ -199,6 +199,9 @@ def draw_offer():
     # Write the updated Game dict to Firebase
     game_ref.set(game_dict)
 
+    # Update all clients
+    socketio.emit("drawOffer", room=game.id)
+
     return jsonify(game_dict)
 
 @app.route('/respondoffer', methods=["POST"])
