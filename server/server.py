@@ -256,6 +256,9 @@ def resign():
     # Write the updated Game dict to Firebase
     game_ref.set(game_dict)
 
+    # Update all clients
+    socketio.emit("forfeit", room=game.id)
+
     return jsonify(game_dict)
 
 if __name__ == "__main__":
