@@ -89,7 +89,7 @@ def create_game():
 
     # Retrieve game ID count, increment it and cast it to a string.
     count_ref = db.collection(COUNTS_COLLECTION).document(GAMES_COLLECTION)
-    count = str(int(count_ref.to_dict()['count']) + 1)
+    count = str(int(count_ref.get().to_dict()['count']) + 1)
 
     # Create a new document reference with the incremented ID.
     doc_ref = db.collection(GAMES_COLLECTION).document(count)
@@ -107,7 +107,7 @@ def create_game():
     # Update the incremented ID count on the `/counts/games` document.
     # HACK: Firebase's `update` does not seem to work for this purpose,
     #   otherwise we could do `count_ref.update({'count': int(count)})`.
-    game_count_document = count_ref.to_dict()
+    game_count_document = count_ref.get().to_dict()
     game_count_document['count'] = int(count)
     count_ref.set(game_count_document)
 
