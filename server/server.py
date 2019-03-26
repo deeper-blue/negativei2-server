@@ -37,6 +37,7 @@ else:
 
 GAMES_COLLECTION = "games"
 CONTROLLER_COLLECTION = "controllers"
+COUNTS_COLLECTION = "counts"
 
 BAD_REQUEST = 400
 REQUEST_OK = 'OK'
@@ -85,10 +86,27 @@ def create_game():
     errors = CreateGameInput(db).validate(request.form)
     if errors:
         abort(BAD_REQUEST, str(errors))
-    # create new doc ID
-    doc_ref = db.collection(GAMES_COLLECTION).document()
-    g = Game.from_create_game_schema(request.form, doc_ref.id)
-    doc_ref.create(g.to_dict())
+
+    # Retrieve game ID count, increment it and cast it to a string.
+    count_ref = db.collection(COUNTS_COLLECTION).document("games")
+    count = str(int(count_ref.get().to_dict()['count']) + 1)
+
+    # Create a new document reference with the incremented ID.
+    doc_ref = db.collection(GAMES_COLLECTION).document(count)
+
+    # Create a game from the validated schema and the incremented ID.
+    game = Game.from_create_game_schema(request.form, doc_ref.id)
+
+    # Write the game's dict to the document reference.
+    # NOTE: `set` is used here rather than `create` in the event that
+    #   the counts are somehow modified on Firebase. For example, if
+    #   the count is somehow reset to 0, this will overwrite whatever
+    #   game is stored with ID 0, instead of raising an error.
+    doc_ref.set(game.to_dict())
+
+    # Update the incremented ID count on the `/counts/games` document.
+    count_ref.update({'count': int(count)})
+
     return get_game(doc_ref.id)
 
 @app.route('/gamelist')
