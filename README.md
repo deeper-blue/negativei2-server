@@ -32,7 +32,6 @@ The repository is laid out in the following structure:
  - Heroku CLI
  - Python 3
  - virtualenv
- - pytest (optional for testing)
 
 Run the following to set up a virtual environment. This will make sure that you are running the correct version of Python and that your libraries won't clash with versions if working on multiple Python projects.
 
