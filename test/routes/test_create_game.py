@@ -42,6 +42,7 @@ class CreateGameTest(unittest.TestCase):
     def set_up_mock(self, mock_db, mock_auth):
         """Creates some entries in the mock database"""
         mock_auth._mock_add_user("some_creator")
+        mock_db.collection("counts").add({'count': 0}, document_id='games')
 
     def test_invalid_creator_id(self, mock_db, mock_auth):
         """An invalid creator ID should error"""
@@ -49,7 +50,6 @@ class CreateGameTest(unittest.TestCase):
         params = self.create_dummy_params()
         params["creator_id"] = "definitelyinvalidID"
         response = self.post(params)
-        print(response)
         self.assertEqual(BAD_REQUEST, response.status_code)
 
     def test_invalid_player_id(self, mock_db, mock_auth):
@@ -58,7 +58,6 @@ class CreateGameTest(unittest.TestCase):
         params = self.create_dummy_params()
         params["player1_id"] = "definitelyinvalidID"
         response = self.post(params)
-        print(response)
         self.assertEqual(BAD_REQUEST, response.status_code)
 
     def test_negative_time_per_player(self, mock_db, mock_auth):
@@ -67,7 +66,6 @@ class CreateGameTest(unittest.TestCase):
         params = self.create_dummy_params()
         params["time_per_player"] = -500
         response = self.post(params)
-        print(response)
         self.assertEqual(BAD_REQUEST, response.status_code)
 
     @pytest.mark.xfail
@@ -88,6 +86,7 @@ class CreateGameTest(unittest.TestCase):
            that need to be there.
         """
         self.set_up_mock(mock_db, mock_auth)
+
         params = self.create_dummy_params()
         response = self.post(params)
         json_game = json.loads(response.data)
@@ -119,8 +118,6 @@ class CreateGameTest(unittest.TestCase):
         self.assertEqual(OK, response.status_code)
         json_game = json.loads(response.data)
         game_id = json_game["id"]
-        print(f"json_game: {json_game}")
-        print(f"Game ID: {game_id}")
         get_game_response = self.client.get(f"/getgame/{game_id}")
         self.assertEqual(OK, get_game_response.status_code)
         json_get_game = json.loads(get_game_response.data)
