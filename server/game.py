@@ -290,7 +290,8 @@ class Game:
             },
             'capture': {
                 'capture': self._board.is_capture(move),
-                'piece': None
+                'piece': None,
+                'initial_pos_piece': None
             },
             'castle': {
                 'castle': self._board.is_castling(move),
@@ -338,6 +339,9 @@ class Game:
         to = chess.square_name(move.to_square)
         from_ = chess.square_name(move.from_square)
 
+        # save the captured piece's initial position
+        captured_initial_position = self._initial_positions.get(to, None)
+
         # update the dictionary
         self._initial_positions[to] = self._initial_positions[from_]
         del(self._initial_positions[from_])
@@ -367,6 +371,8 @@ class Game:
             en_passant_square = self._get_en_passant_square()
             del self._initial_positions[en_passant_square]
 
+        return captured_initial_position
+
     def move(self, san) -> dict:
         """Makes a requested move on the internal board.
 
@@ -392,7 +398,7 @@ class Game:
         validate_board.push_san(san)
 
         # Update piece to initial position dict
-        self._update_initial_positions(self._board.parse_san(san), self.turn)
+        captured_initial_position = self._update_initial_positions(self._board.parse_san(san), self.turn)
 
         # Make the move on the internal board
         move = self._board.push_san(san)
@@ -409,6 +415,9 @@ class Game:
         #   to be at the start of the detailed move dict (despite dicts not actually being ordered)
         #   this was the cleanest way I could find to do it - just merging two dicts together.
         detailed_move = {**{'san': san}, **self._construct_move_description(move)}
+
+        # Set capture.initial_pos_piece
+        detailed_move['capture']['initial_pos_piece'] = captured_initial_position
 
         # Add the detailed move to self._history
         self._history.append(detailed_move)

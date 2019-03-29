@@ -201,7 +201,7 @@ class GameTest(unittest.TestCase):
                 'from': 'f2',
                 'to': 'f3',
                 'promotion': {'promotion': False, 'piece': None},
-                'capture': {'capture': False, 'piece': None},
+                'capture': {'capture': False, 'piece': None, 'initial_pos_piece': None},
                 'castle': {'castle': False, 'side': None},
                 'en_passant': {'en_passant': False, 'square': None}
             },
@@ -215,7 +215,7 @@ class GameTest(unittest.TestCase):
                 'from': 'e7',
                 'to': 'e5',
                 'promotion': {'promotion': False, 'piece': None},
-                'capture': {'capture': False, 'piece': None},
+                'capture': {'capture': False, 'piece': None, 'initial_pos_piece': None},
                 'castle': {'castle': False, 'side': None},
                 'en_passant': {'en_passant': False, 'square': None}
             },
@@ -229,7 +229,7 @@ class GameTest(unittest.TestCase):
                 'from': 'g2',
                 'to': 'g4',
                 'promotion': {'promotion': False, 'piece': None},
-                'capture': {'capture': False, 'piece': None},
+                'capture': {'capture': False, 'piece': None, 'initial_pos_piece': None},
                 'castle': {'castle': False, 'side': None},
                 'en_passant': {'en_passant': False, 'square': None}
             },
@@ -243,7 +243,7 @@ class GameTest(unittest.TestCase):
                 'from': 'd8',
                 'to': 'h4',
                 'promotion': {'promotion': False, 'piece': None},
-                'capture': {'capture': False, 'piece': None},
+                'capture': {'capture': False, 'piece': None, 'initial_pos_piece': None},
                 'castle': {'castle': False, 'side': None},
                 'en_passant': {'en_passant': False, 'square': None}
             }
@@ -728,7 +728,7 @@ class GameTest(unittest.TestCase):
             'from': 'b1',
             'to': 'c3',
             'promotion': {'promotion': False, 'piece': None},
-            'capture': {'capture': False, 'piece': None},
+            'capture': {'capture': False, 'piece': None, 'initial_pos_piece': None},
             'castle': {'castle': False, 'side': None},
             'en_passant': {'en_passant': False, 'square': None}
         })
