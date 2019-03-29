@@ -11,6 +11,8 @@ SCORES = {
     'draw': '1/2-1/2'
 }
 
+SLOTS = ['OPEN', 'AI']
+
 class Game:
     """Class representing and encapsulating the logic required for handling a chess game with time controls.
 
@@ -596,7 +598,7 @@ class Game:
         for piece in ['r', 'n', 'b', 'q', 'k', 'p']:
             output = output.replace(piece, chess.UNICODE_PIECE_SYMBOLS[piece])
 
-        # Add file rank labels
+        # Add file labels
         ranks = [f"{8-i} {rank}" for i, rank in enumerate(output.split('\n'))]
 
         # Add rank labels
@@ -610,14 +612,15 @@ class Game:
 
         Assumes that the input dictionary has already been validated against the schema.
         """
-        g = cls(input_dict['creator_id'], game_id, int(input_dict['time_per_player']))
-        #TODO: below constants should be places somewhere unified
-        if input_dict['player1_id'] not in ['OPEN', 'AI']:
-            g.add_player(input_dict['player1_id'], 'w')
-        if input_dict['player2_id'] not in ['OPEN', 'AI']:
-            g.add_player(input_dict['player2_id'], 'b')
 
-        return g
+        game = cls(input_dict['creator_id'], game_id, int(input_dict['time_per_player']))
+
+        if input_dict['player1_id'] not in SLOTS:
+            game.add_player(input_dict['player1_id'], WHITE)
+        if input_dict['player2_id'] not in SLOTS:
+            game.add_player(input_dict['player2_id'], BLACK)
+
+        return game
 
     @classmethod
     def from_dict(cls, input_dict):
@@ -633,7 +636,7 @@ class Game:
             raise KeyError(f"Missing required attribute keys from 'input_dict': {missing_keys}")
 
         # Create a new game object
-        game = Game(input_dict['creator'], input_dict['id'])
+        game = cls(input_dict['creator'], input_dict['id'])
 
         # Generate a new internal board (FEN)
         game._board = chess.Board()
