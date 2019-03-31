@@ -80,7 +80,7 @@ class ControllerPollTest(unittest.TestCase):
     def set_up_mock_db(self, mock_db):
         """Helper function to populate db"""
         kevin = {"board_id": "kevin", "board_version": "0.0.1",
-                 "last_seen": time.time(), "game_id": None}
+                 "last_seen": time.time(), "game_id": None, 'last_ply_count': 0}
         mock_db.collection(CONTROLLER_COLLECTION).document("kevin").set(kevin)
         mock_db.collection("games").document("no_history").set(NO_HISTORY)
         mock_db.collection("games").document("two_moves").set(TWO_MOVES)
