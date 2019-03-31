@@ -7,7 +7,7 @@ from flask_cors import CORS
 from flask_socketio import SocketIO, join_room
 from schemas.game import MakeMoveInput, CreateGameInput, JoinGameInput, DrawOfferInput, RespondOfferInput, ResignInput
 from schemas.controller import ControllerRegisterInput, ControllerPollInput
-from .game import Game
+from .game import Game, WHITE
 from .sunfish_ai import get_ai_move
 import google.cloud
 from google.cloud import firestore
@@ -108,6 +108,13 @@ def create_game():
 
     # Create a game from the validated schema and the incremented ID.
     game = Game.from_create_game_schema(request.form, doc_ref.id)
+
+    # If the AI is the first player, make a move
+    if game.players[WHITE] == 'AI':
+        ai_san = get_ai_move(game)
+        game.move(ai_san)
+        # we're not emitting a 'move' event here because the client doesn't yet
+        # have a game ID to listen for events on
 
     # Write the game's dict to the document reference.
     # NOTE: `set` is used here rather than `create` in the event that
