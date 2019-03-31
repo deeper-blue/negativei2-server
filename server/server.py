@@ -222,7 +222,7 @@ def draw_offer():
     game_ref.set(game_dict)
 
     # Update all clients
-    socketio.emit("drawOffer", game.players[side], room=game.id)
+    socketio.emit("drawOffer", request.form['user_id'], room=game.id)
 
     return jsonify(game_dict)
 
@@ -253,7 +253,7 @@ def respond_to_draw_offer():
     game_ref.set(game_dict)
 
     # Update all clients
-    id_draw_offers = {'id': game.players[side], 'draws': game.draw_offers}
+    id_draw_offers = {'id': request.form['user_id'], 'draws': game.draw_offers}
     socketio.emit("drawAnswer", id_draw_offers, room=game.id)
 
     return jsonify(game_dict)
@@ -280,7 +280,7 @@ def resign():
     game_ref.set(game_dict)
 
     # Update all clients
-    socketio.emit("forfeit", game.players[side], room=game.id)
+    socketio.emit("forfeit", request.form['user_id'], room=game.id)
 
     return jsonify(game_dict)
 
