@@ -67,3 +67,7 @@ You can then visit the server by going to `http://localhost:5000` in your browse
 No commits are allowed directly to master. All PRs to master need to pass status checks and be reviewed by at least one other contributor. Ideally, all pull requests should come with tests for the code within.
 
 **Branch naming** - The convention `<username>/<descriptive word or phrase>` should be used.
+
+## License
+
+This code is licensed under the GPL v3.0. For the full license text, please refer to LICENSE.md.
