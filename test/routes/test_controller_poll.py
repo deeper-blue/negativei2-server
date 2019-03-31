@@ -3,7 +3,7 @@
 import time
 import json
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch, ANY
 from server.server import app
 from server.schemas.controller import CONTROLLER_COLLECTION, TIMEOUT
 from .mock_firebase import MockClient
@@ -58,6 +58,7 @@ TWO_MOVES = {"creator": "some_creator",
              }
             }
 
+@patch('server.server.db', new_callable=MockClient)
 class ControllerPollTest(unittest.TestCase):
     # Setup and helper functions
 
@@ -84,7 +85,6 @@ class ControllerPollTest(unittest.TestCase):
         mock_db.collection("games").document("no_history").set(NO_HISTORY)
         mock_db.collection("games").document("two_moves").set(TWO_MOVES)
 
-    @patch('server.server.db', new_callable=MockClient)
     def test_return_empty_if_no_assigned_game(self, mock_db):
         """If there is no assigned game to the controller, there should be nothing to do"""
         self.set_up_mock_db(mock_db)
@@ -94,7 +94,6 @@ class ControllerPollTest(unittest.TestCase):
         response_json = json.loads(response.data)
         self.assertEqual(0, len(response_json["history"]))
 
-    @patch('server.server.db', new_callable=MockClient)
     def test_return_empty_if_no_history(self, mock_db):
         """Should return no moves if game has no moves"""
         self.set_up_mock_db(mock_db)
@@ -105,7 +104,6 @@ class ControllerPollTest(unittest.TestCase):
         response_json = json.loads(response.data)
         self.assertEqual(0, len(response_json["history"]))
 
-    @patch('server.server.db', new_callable=MockClient)
     def test_return_all_history_if_ply_0(self, mock_db):
         """Should return the whole history if a game has 0 moves"""
         self.set_up_mock_db(mock_db)
@@ -116,7 +114,6 @@ class ControllerPollTest(unittest.TestCase):
         response_json = json.loads(response.data)
         self.assertEqual(2, len(response_json["history"]))
 
-    @patch('server.server.db', new_callable=MockClient)
     def test_should_return_partial_history_if_ply_nonzero(self, mock_db):
         """Should only return moves after ply"""
         self.set_up_mock_db(mock_db)
@@ -127,7 +124,6 @@ class ControllerPollTest(unittest.TestCase):
         response_json = json.loads(response.data)
         self.assertEqual(1, len(response_json["history"]))
 
-    @patch('server.server.db', new_callable=MockClient)
     def test_return_nothing_when_error(self, mock_db):
         """When the controller reports an error, the server should return nothing"""
         self.set_up_mock_db(mock_db)
@@ -139,7 +135,6 @@ class ControllerPollTest(unittest.TestCase):
         response_json = json.loads(response.data)
         self.assertEqual(0, len(response_json["history"]))
 
-    @patch('server.server.db', new_callable=MockClient)
     def test_unknown_controller_errors(self, mock_db):
         """If the controller is not registered, should error"""
         self.set_up_mock_db(mock_db)
@@ -147,7 +142,6 @@ class ControllerPollTest(unittest.TestCase):
         response = self.post(params)
         self.assertEqual(BAD_REQUEST, response.status_code)
 
-    @patch('server.server.db', new_callable=MockClient)
     def test_registration_time_out_errors(self, mock_db):
         """If the controller has not been seen in TIME_OUT seconds, should error"""
         self.set_up_mock_db(mock_db)
@@ -155,3 +149,49 @@ class ControllerPollTest(unittest.TestCase):
         params = {"board_id": "kevin", "ply_count": 0, "error": None}
         response = self.post(params)
         self.assertEqual(BAD_REQUEST, response.status_code)
+
+    @patch('server.server.socketio')
+    def test_emits_controller_finished(self, mock_socketio, mock_db):
+        """If the controller sends a ply_count higher than the last one we saw,
+        then the server should emit an event to let the web app know the controller
+        has finished the last move made.
+        """
+        self.set_up_mock_db(mock_db)
+        mock_db.collection(CONTROLLER_COLLECTION).document("kevin").data["game_id"] = "two_moves"
+        params = {"board_id": "kevin", "ply_count": 0, "error": None}
+        # send a ply_count of 0
+        response = self.post(params)
+        self.assertEqual(OK, response.status_code)
+
+        # assert socketio was not used
+        mock_socketio.emit.assert_not_called()
+
+        # send a ply_count of 1
+        params["ply_count"] = 1
+        response = self.post(params)
+        self.assertEqual(OK, response.status_code)
+
+        # assert socketio was used
+        mock_socketio.emit.assert_called_with('controller_finished', ANY, room=ANY)
+
+    @patch('server.server.socketio')
+    def test_doesnt_emit_finished_ply_count_same(self, mock_socketio, mock_db):
+        """If the controller polls twice with the same ply_count then controller_finished
+        shouldn't be emit.
+        """
+        self.set_up_mock_db(mock_db)
+        mock_db.collection(CONTROLLER_COLLECTION).document("kevin").data["game_id"] = "two_moves"
+        params = {"board_id": "kevin", "ply_count": 0, "error": None}
+        # send a ply_count of 0
+        response = self.post(params)
+        self.assertEqual(OK, response.status_code)
+
+        # assert socketio was not used
+        mock_socketio.emit.assert_not_called()
+
+        # send same request
+        response = self.post(params)
+        self.assertEqual(OK, response.status_code)
+
+        # assert socketio still was not used
+        mock_socketio.emit.assert_not_called()
