@@ -8,6 +8,7 @@ from flask_socketio import SocketIO, join_room
 from schemas.game import MakeMoveInput, CreateGameInput, JoinGameInput, DrawOfferInput, RespondOfferInput, ResignInput
 from schemas.controller import ControllerRegisterInput, ControllerPollInput
 from .game import Game
+from .sunfish_ai import get_ai_move
 import google.cloud
 from google.cloud import firestore
 import firebase_admin
@@ -50,7 +51,7 @@ socketio = SocketIO(app)
 def main():
     return 'hello world'
 
-@app.route('/makemove', methods=["POST"])
+@app.route('/makemove', methods=['POST'])
 def make_move():
     errors = MakeMoveInput(db).validate(request.form)
     if errors:
@@ -63,14 +64,25 @@ def make_move():
     # Make the requested move on the game object
     game.move(request.form['move'])
 
+    # emit user move update since AI may take some time
+    socketio.emit("move", game.to_dict, room=game.id)
+
+    # If opponent is AI, make AI move too
+    # game.turn will be opponent's turn now since we just made a move
+    opponent_is_ai = game.players[game.turn] == 'AI'
+    if opponent_is_ai:
+        ai_san = get_ai_move(game)
+        game.move(ai_san)
+
     # Export the updated Game object to a dict
     game_dict = game.to_dict()
 
     # Write the updated Game dict to Firebase
     game_ref.set(game_dict)
 
-    # update all clients
-    socketio.emit("move", game_dict, room=game.id)
+    # only need to emit update here if AI moved
+    if opponent_is_ai:
+        socketio.emit('move', game_dict, room=game.id)
 
     return jsonify(game_dict)
 

@@ -11,8 +11,6 @@ SCORES = {
     'draw': '1/2-1/2'
 }
 
-SLOTS = ['OPEN', 'AI']
-
 class Game:
     """Class representing and encapsulating the logic required for handling a chess game with time controls.
 
@@ -624,9 +622,9 @@ class Game:
 
         game = cls(input_dict['creator_id'], game_id, int(input_dict['time_per_player']))
 
-        if input_dict['player1_id'] not in SLOTS:
+        if input_dict['player1_id'] != 'OPEN':
             game.add_player(input_dict['player1_id'], WHITE)
-        if input_dict['player2_id'] not in SLOTS:
+        if input_dict['player2_id'] != 'OPEN':
             game.add_player(input_dict['player2_id'], BLACK)
 
         return game
