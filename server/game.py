@@ -635,7 +635,7 @@ class Game:
             creator_id=input_dict['creator_id'],
             game_id=game_id,
             time_controls=int(input_dict['time_per_player']),
-            public=(input_dict['public'].lower() == 'true')
+            public=(input_dict.get('public', 'true').lower() == 'true')
         )
 
         if input_dict['player1_id'] != 'OPEN':

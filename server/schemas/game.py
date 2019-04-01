@@ -72,7 +72,8 @@ class CreateGameInput(Schema):
     # ID of the robot/board to play on. Reserved for future use
     board_id = fields.String(required=True)
     # Whether the game is publicly listed or not
-    public = fields.Boolean(required=True)
+    # NOTE: Not actually required since this defaults to True when initializing the game object anyway.
+    public = fields.Boolean(required=False)
 
     def __init__(self, db):
         super().__init__()
