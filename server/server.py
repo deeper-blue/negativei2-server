@@ -164,15 +164,15 @@ def join_game():
     game_ref.set(g.to_dict())
     return get_game(game_id)
 
-@app.route('/controllerregister', methods=["POST"])
+@app.route('/controllerregister', methods=['POST'])
 def register_controller():
     errors = ControllerRegisterInput(db).validate(request.form)
     if errors:
         abort(BAD_REQUEST, str(errors))
-    controller_id = request.form["board_id"]
+    controller_id = request.form['board_id']
     controller_ref = db.collection(CONTROLLER_COLLECTION).document(controller_id)
 
-    controller_dict = {"game_id": None, **request.form}
+    controller_dict = {'game_id': None, 'last_ply_count': 0, **request.form}
     # avoid overwriting game_id
     if controller_ref.get().exists:
         controller_dict = controller_ref.get().to_dict()
@@ -181,7 +181,7 @@ def register_controller():
     controller_ref.set(controller_dict)
     return 'registered'
 
-@app.route('/controllerpoll', methods=["POST"])
+@app.route('/controllerpoll', methods=['POST'])
 def controller_poll():
     errors = ControllerPollInput(db).validate(request.form)
     if errors:
@@ -190,15 +190,22 @@ def controller_poll():
     controller_ref = db.collection(CONTROLLER_COLLECTION).document(controller_id)
     controller_dict = controller_ref.get().to_dict()
 
-    # update last_seen
+    game_id = controller_dict['game_id']
+    error = int(request.form.get('error', -1))
+    ply_count = int(request.form['ply_count'])
+
+    # check if last_ply_count is less than current
+    last_ply_count = controller_dict['last_ply_count']
+    if last_ply_count < ply_count:
+        # controller has finished a move
+        socketio.emit('controller_finished', ply_count, room=game_id)
+
+    # update controller document
     controller_dict['last_seen'] = time.time()
+    controller_dict['last_ply_count'] = ply_count
     controller_ref.set(controller_dict)
 
     poll_response = {'game_over': {'game_over': False, 'reason': None}, 'history': []}
-
-    game_id = controller_dict['game_id']
-    ply_count = int(request.form['ply_count'])
-    error = int(request.form.get('error', -1))
 
     if error != -1:
         # let web app know about error
@@ -241,7 +248,7 @@ def draw_offer():
     game_ref.set(game_dict)
 
     # Update all clients
-    socketio.emit("drawOffer", room=game.id)
+    socketio.emit("drawOffer", request.form['user_id'], room=game.id)
 
     return jsonify(game_dict)
 
@@ -272,7 +279,8 @@ def respond_to_draw_offer():
     game_ref.set(game_dict)
 
     # Update all clients
-    socketio.emit("drawAnswer", game.draw_offers, room=game.id)
+    id_draw_offers = {'id': request.form['user_id'], 'draws': game.draw_offers}
+    socketio.emit("drawAnswer", id_draw_offers, room=game.id)
 
     return jsonify(game_dict)
 
@@ -298,7 +306,7 @@ def resign():
     game_ref.set(game_dict)
 
     # Update all clients
-    socketio.emit("forfeit", room=game.id)
+    socketio.emit("forfeit", request.form['user_id'], room=game.id)
 
     return jsonify(game_dict)
 
