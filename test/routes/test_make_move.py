@@ -35,6 +35,7 @@ class MakeMoveTest(unittest.TestCase):
             'id': 'some_game',
             'creator': 'some_creator',
             'players': {'w': 'some_player_1', 'b': 'some_player_2'},
+            'public': True,
             'free_slots': 2,
             'time_controls': None,
             'remaining_time': {'w': None, 'b': None},

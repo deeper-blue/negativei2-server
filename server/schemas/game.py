@@ -71,6 +71,9 @@ class CreateGameInput(Schema):
     time_per_player = fields.Integer(required=True)
     # ID of the robot/board to play on. Reserved for future use
     board_id = fields.String(required=True)
+    # Whether the game is publicly listed or not
+    # NOTE: Not actually required since this defaults to True when initializing the game object anyway.
+    public = fields.Boolean(required=False)
 
     def __init__(self, db):
         super().__init__()

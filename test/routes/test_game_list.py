@@ -20,6 +20,7 @@ TWO_FREE_SLOTS = {"creator": "some_creator",
                   "move_count": 1,
                   "pgn": "",
                   "players": {"b":None,"w":None},
+                  "public": True,
                   "ply_count": 0,
                   "remaining_time": {"b":3600,"w":3600},
                   "result": "*",
@@ -92,3 +93,23 @@ class GameListTest(unittest.TestCase):
         self.assertEqual(OK, response.status_code)
         game_list = json.loads(response.data)
         self.assertEqual(0, len(game_list))
+
+    @patch('server.server.db', new_callable=MockClient)
+    def test_public_games_displayed(self, mock_db):
+        mock_db.collection(GAMES_COLLECTION).add(copy.deepcopy(TWO_FREE_SLOTS))
+        response = self.get()
+        self.assertEqual(OK, response.status_code)
+        game_list = json.loads(response.data)
+        self.assertEqual(1, len(game_list))
+
+    @patch('server.server.db', new_callable=MockClient)
+    def test_private_games_not_displayed(self, mock_db):
+        private = copy.deepcopy(TWO_FREE_SLOTS)
+        private["public"] = False
+        mock_db.collection(GAMES_COLLECTION).add(copy.deepcopy(TWO_FREE_SLOTS))
+        mock_db.collection(GAMES_COLLECTION).add(private)
+        response = self.get()
+        self.assertEqual(OK, response.status_code)
+        game_list = json.loads(response.data)
+        self.assertEqual(1, len(game_list))
+        self.assertEqual(TWO_FREE_SLOTS, game_list[0])
