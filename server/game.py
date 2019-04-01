@@ -634,11 +634,9 @@ class Game:
         game = cls(
             creator_id=input_dict['creator_id'],
             game_id=game_id,
-            time_controls=int(input_dict['time_per_player'])
+            time_controls=int(input_dict['time_per_player']),
+            public=(input_dict['public'].lower() == 'true')
         )
-
-        if input_dict['public']:
-            game._public = input_dict['public'].lower() == 'true'
 
         if input_dict['player1_id'] != 'OPEN':
             game.add_player(input_dict['player1_id'], WHITE)
