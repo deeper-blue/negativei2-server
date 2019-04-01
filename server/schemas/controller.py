@@ -3,7 +3,7 @@ from marshmallow import Schema, fields, validates, validates_schema, ValidationE
 
 GAMES_COLLECTION = "games"
 CONTROLLER_COLLECTION = "controllers"
-TIMEOUT = 60 # seconds
+TIMEOUT = 600 # 10 minutes
 
 class ControllerRegisterInput(Schema):
     board_id        = fields.String(required=True)
