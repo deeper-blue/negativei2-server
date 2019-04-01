@@ -186,7 +186,8 @@ def controller_poll():
     controller_dict['last_ply_count'] = ply_count
     controller_ref.set(controller_dict)
 
-    poll_response = {'game_over': {'game_over': False, 'reason': None}, 'history': []}
+    poll_response = {'game_over': {'game_over': False, 'reason': None},
+                     'history': [], 'initial_positions': {}}
 
     if error != -1:
         # let web app know about error
@@ -195,6 +196,7 @@ def controller_poll():
     if game_id is not None and error == -1:
         game_dict = db.collection(GAMES_COLLECTION).document(game_id).get().to_dict()
         poll_response['game_over'] = game_dict['game_over']
+        poll_response['initial_positions'] = game_dict['initial_positions']
 
         # game_dict['ply_count'] == len(history)
         for i in range(ply_count, game_dict['ply_count']):

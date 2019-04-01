@@ -29,7 +29,8 @@ NO_HISTORY = {"creator": "some_creator",
               "draw_offers": {
                   "w": {"made": False, "accepted": False},
                   "b": {"made": False, "accepted": False}
-              }
+              },
+              "initial_positions": {}
              }
 
 TWO_MOVES = {"creator": "some_creator",
@@ -55,7 +56,8 @@ TWO_MOVES = {"creator": "some_creator",
              "draw_offers": {
                  "w": {"made": False, "accepted": False},
                  "b": {"made": False, "accepted": False}
-             }
+             },
+             "initial_positions": {}
             }
 
 @patch('server.server.db', new_callable=MockClient)
