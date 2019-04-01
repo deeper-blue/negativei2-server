@@ -37,7 +37,8 @@ class CreateGameTest(unittest.TestCase):
                 "player1_id": "OPEN", # TODO: make a constant in the file that deals with this and import it
                 "player2_id": "OPEN",
                 "time_per_player": 60 * 60, # 1 hour per player
-                "board_id": 0}
+                "board_id": 0,
+                "public": True}
 
     def set_up_mock(self, mock_db, mock_auth):
         """Creates some entries in the mock database"""

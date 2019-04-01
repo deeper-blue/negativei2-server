@@ -46,12 +46,12 @@ class GameTest(unittest.TestCase):
         self.game_ft = Game('1', time_controls=0)
 
         # Game with players (and no time controls)
-        self.game_wp = Game('1')
+        self.game_wp = Game('1', public=True)
         self.game_wp.add_player('1', side=WHITE)
         self.game_wp.add_player('2', side=BLACK)
 
         # Game with players and time controls
-        self.game_wpt = Game('1', '1', time_controls=60)
+        self.game_wpt = Game('1', '1', time_controls=60, public=False)
         self.game_wpt.add_player('1', side=WHITE)
         self.game_wpt.add_player('2', side=BLACK)
 
