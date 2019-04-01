@@ -134,8 +134,10 @@ def create_game():
 
 @app.route('/gamelist')
 def game_list():
-    query = db.collection(
-        GAMES_COLLECTION).where('game_over.game_over', '==', False).where('free_slots', '>', 0)
+    query = db.collection(GAMES_COLLECTION) \
+        .where('game_over.game_over', '==', False) \
+        .where('free_slots', '>', 0) \
+        .where('public', '==', True)
     return jsonify([ref.to_dict() for ref in query.get()])
 
 @app.route('/joingame', methods=["POST"])

@@ -46,12 +46,12 @@ class GameTest(unittest.TestCase):
         self.game_ft = Game('1', time_controls=0)
 
         # Game with players (and no time controls)
-        self.game_wp = Game('1')
+        self.game_wp = Game('1', public=True)
         self.game_wp.add_player('1', side=WHITE)
         self.game_wp.add_player('2', side=BLACK)
 
         # Game with players and time controls
-        self.game_wpt = Game('1', '1', time_controls=60)
+        self.game_wpt = Game('1', '1', time_controls=60, public=False)
         self.game_wpt.add_player('1', side=WHITE)
         self.game_wpt.add_player('2', side=BLACK)
 
@@ -340,6 +340,19 @@ class GameTest(unittest.TestCase):
     def test_prop_free_slots_both(self):
         """With both players added."""
         self.assertEqual(self.game_wpt.free_slots, 0)
+
+    # NOTE: 'public' property
+    def test_prop_public_unassigned(self):
+        """When not assigned in `__init__`, should assume game is public."""
+        self.assertEqual(self.game_ft.public, True)
+
+    def test_prop_public_true(self):
+        """When assigned to `true` in `__init__`."""
+        self.assertEqual(self.game_wp.public, True)
+
+    def test_prop_public_false(self):
+        """When assigned to `false` in `__init__`."""
+        self.assertEqual(self.game_wpt.public, False)
 
     # NOTE: 'result' property
     def test_prop_result_1_0_without_time(self):
