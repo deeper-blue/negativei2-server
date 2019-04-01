@@ -21,6 +21,7 @@ class Game:
         _remaining_time:    The remaining time for both sides.
         _board:             The internal board object for the game.
         _players:           The sides of the game and their corresponding players.
+        _public:            Whether the game is publicly listed for players to join.
         _plies:             The ply count (version number).
         _history:           The game move history.
         _resigned:          The resignation status for both sides.
@@ -44,7 +45,7 @@ class Game:
         methods provided in the class. Each of these instance methods has their own docstring description.
     """
 
-    def __init__(self, creator_id, game_id=None, time_controls=None):
+    def __init__(self, creator_id, game_id=None, time_controls=None, public=True):
         if isinstance(creator_id, str):
             self._creator = creator_id
         else:
@@ -66,6 +67,11 @@ class Game:
             self._time_controls = time_controls
         else:
             raise TypeError(f"Expected 'time_controls' argument to be an int (or None), got: {type(time_controls)}.")
+
+        if (type(public) == bool):
+            self._public = public
+        else:
+            raise TypeError(f"Expected 'public' argument to be a bool, got: {type(public)}.")
 
         self._remaining_time = {WHITE: time_controls, BLACK: time_controls}
         self._board = chess.Board()
@@ -99,6 +105,11 @@ class Game:
     def players(self) -> dict:
         """Dictionary representing the players playing the game."""
         return self._players
+
+    @property
+    def public(self) -> bool:
+        """Whether the game is publicly listed or not."""
+        return self._public
 
     @property
     def time_controls(self) -> int:
@@ -631,8 +642,20 @@ class Game:
 
     @classmethod
     def from_dict(cls, input_dict):
-        required_keys = ['id', 'creator', 'players', 'time_controls', 'history', 'remaining_time', 'ply_count', 'resigned', 'draw_offers', 'initial_positions']
         missing_keys = []
+        required_keys = [
+            'id',
+            'creator',
+            'players',
+            'public',
+            'time_controls',
+            'history',
+            'remaining_time',
+            'ply_count',
+            'resigned',
+            'draw_offers',
+            'initial_positions'
+        ]
 
         # Check for any missing keys
         for key in required_keys:
@@ -658,6 +681,7 @@ class Game:
             game._board.push_san(move['san'])
 
         # Load in any remaining attributes from the input dictionary
+        game._public = input_dict['public']
         game._remaining_time = input_dict['remaining_time']
         game._plies = input_dict['ply_count']
         game._resigned = input_dict['resigned']
@@ -677,6 +701,7 @@ class Game:
             'id':                   self.id,
             'creator':              self.creator,
             'players':              self.players,
+            'public':               self.public,
             'free_slots':           self.free_slots,
             'time_controls':        self.time_controls,
             'remaining_time':       self.remaining_time,
