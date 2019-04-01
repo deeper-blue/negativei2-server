@@ -96,6 +96,7 @@ class GameListTest(unittest.TestCase):
 
     @patch('server.server.db', new_callable=MockClient)
     def test_public_games_displayed(self, mock_db):
+        mock_db.collection(GAMES_COLLECTION).add(copy.deepcopy(TWO_FREE_SLOTS))
         response = self.get()
         self.assertEqual(OK, response.status_code)
         game_list = json.loads(response.data)
@@ -105,8 +106,10 @@ class GameListTest(unittest.TestCase):
     def test_private_games_not_displayed(self, mock_db):
         private = copy.deepcopy(TWO_FREE_SLOTS)
         private["public"] = False
+        mock_db.collection(GAMES_COLLECTION).add(copy.deepcopy(TWO_FREE_SLOTS))
         mock_db.collection(GAMES_COLLECTION).add(private)
         response = self.get()
         self.assertEqual(OK, response.status_code)
         game_list = json.loads(response.data)
-        self.assertEqual(0, len(game_list))
+        self.assertEqual(1, len(game_list))
+        self.assertEqual(TWO_FREE_SLOTS, game_list[0])
