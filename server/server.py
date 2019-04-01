@@ -65,7 +65,7 @@ def make_move():
     game.move(request.form['move'])
 
     # emit user move update since AI may take some time
-    socketio.emit("move", game.to_dict(), room=game.id)
+    socketio.emit("move", game.to_dict, room=game.id)
 
     # If opponent is AI, make AI move too
     # game.turn will be opponent's turn now since we just made a move
