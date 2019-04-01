@@ -68,7 +68,7 @@ class Game:
         else:
             raise TypeError(f"Expected 'time_controls' argument to be an int (or None), got: {type(time_controls)}.")
 
-        if (type(public) == bool):
+        if isinstance(public, bool):
             self._public = public
         else:
             raise TypeError(f"Expected 'public' argument to be a bool, got: {type(public)}.")
