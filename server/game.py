@@ -631,7 +631,14 @@ class Game:
         Assumes that the input dictionary has already been validated against the schema.
         """
 
-        game = cls(input_dict['creator_id'], game_id, int(input_dict['time_per_player']))
+        game = cls(
+            creator_id=input_dict['creator_id'],
+            game_id=game_id,
+            time_controls=int(input_dict['time_per_player'])
+        )
+
+        if input_dict['public']:
+            game._public = input_dict['public'].lower() == 'true'
 
         if input_dict['player1_id'] != 'OPEN':
             game.add_player(input_dict['player1_id'], WHITE)
