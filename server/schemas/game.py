@@ -1,10 +1,13 @@
+import time
+import firebase_admin.auth
 from marshmallow import Schema, fields, validates, validates_schema, ValidationError
 from server.game import Game
-import firebase_admin.auth
+from .controller import TIMEOUT
 
 OPEN_SLOT = "OPEN"
 AI = "AI"
 GAME_COLLECTION = "games"
+CONTROLLER_COLLECTION = "controllers"
 
 def assert_player_exists(player):
     """Helper function that checks if a given player id exists in firebase authentication"""
@@ -95,6 +98,17 @@ class CreateGameInput(Schema):
     @validates('creator_id')
     def creator_exists(self, value):
         assert_player_exists(value)
+
+    @validates('board_id')
+    def board_exists_and_is_active(self, value):
+        controller_ref = self.db.collection(CONTROLLER_COLLECTION).document(value).get()
+        if not controller_ref.exists:
+            raise ValidationError('Controller never registered')
+
+        controller_dict = controller_ref.to_dict()
+        # Check controller is still polling (switched on)
+        if time.time() - controller_dict.get('last_seen', 0) >= TIMEOUT:
+            raise ValidationError('Controller not active')
 
 class JoinGameInput(Schema):
     # ID of the game to join

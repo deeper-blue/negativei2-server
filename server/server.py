@@ -123,6 +123,13 @@ def create_game():
     #   game is stored with ID 0, instead of raising an error.
     doc_ref.set(game.to_dict())
 
+    # Assign controller to this game
+    controller_id = request.form['board_id']
+    controller_ref = db.collection(CONTROLLER_COLLECTION).document(controller_id)
+    controller_dict = controller_ref.get().to_dict()
+    controller_dict['game_id'] = doc_ref.id
+    controller_ref.set(controller_dict)
+
     # Update the incremented ID count on the `/counts/games` document.
     # HACK: Firebase's `update` does not seem to work for this purpose,
     #   otherwise we could do `count_ref.update({'count': int(count)})`.
