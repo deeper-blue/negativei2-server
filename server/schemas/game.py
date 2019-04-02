@@ -95,6 +95,15 @@ class CreateGameInput(Schema):
 
         assert_player_exists(value)
 
+    @validates_schema
+    def two_ai_players(self, data):
+        # FIXME: Needed to have this outer condition for some reason.
+        #   Python didn't seem to find these keys in the dict for one of the
+        #   test cases, even though they were in the dict.
+        if ('player1_id' in data) and ('player2_id' in data):
+            if data['player1_id'] == 'AI' and data['player2_id'] == 'AI':
+                raise ValidationError('Cannot create a game with two AI slots.')
+
     @validates('creator_id')
     def creator_exists(self, value):
         assert_player_exists(value)

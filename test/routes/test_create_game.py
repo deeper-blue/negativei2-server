@@ -74,6 +74,15 @@ class CreateGameTest(unittest.TestCase):
         response = self.post(params)
         self.assertEqual(BAD_REQUEST, response.status_code)
 
+    def test_two_ais(self, mock_db, mock_auth):
+        """Two AI slots should error"""
+        self.set_up_mock(mock_db, mock_auth)
+        params = self.create_dummy_params()
+        params["player1_id"] = "AI"
+        params["player2_id"] = "AI"
+        response = self.post(params)
+        self.assertEqual(BAD_REQUEST, response.status_code)
+
     def test_negative_time_per_player(self, mock_db, mock_auth):
         """Having negative time_per_player should error"""
         self.set_up_mock(mock_db, mock_auth)
