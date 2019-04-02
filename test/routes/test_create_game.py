@@ -1,11 +1,13 @@
 """Test cases for the POST server route /creategame."""
 
+import time
 import json
 import unittest
 import pytest
 from unittest.mock import patch
 from server.server import app
 from server.game import WHITE, BLACK
+from server.schemas.controller import TIMEOUT
 from .mock_firebase import MockClient, MockAuth
 
 OK          = 200
@@ -37,13 +39,24 @@ class CreateGameTest(unittest.TestCase):
                 "player1_id": "OPEN", # TODO: make a constant in the file that deals with this and import it
                 "player2_id": "OPEN",
                 "time_per_player": 60 * 60, # 1 hour per player
-                "board_id": 0,
+                "board_id": 'kevin',
                 "public": True}
 
     def set_up_mock(self, mock_db, mock_auth):
         """Creates some entries in the mock database"""
         mock_auth._mock_add_user("some_creator")
         mock_db.collection("counts").add({'count': 0}, document_id='games')
+        mock_db.collection("controllers").add({'board_id': 'kevin',
+                                               'board_version': '1.0',
+                                               'game_id': None,
+                                               'last_ply_count': 0,
+                                               'last_seen': time.time()}, document_id='kevin')
+        mock_db.collection("controllers").add({'board_id': 'offline',
+                                               'board_version': '1.0',
+                                               'game_id': None,
+                                               'last_ply_count': 0,
+                                               'last_seen': time.time() - 2*TIMEOUT},
+                                              document_id='offline')
 
     def test_invalid_creator_id(self, mock_db, mock_auth):
         """An invalid creator ID should error"""
@@ -69,16 +82,19 @@ class CreateGameTest(unittest.TestCase):
         response = self.post(params)
         self.assertEqual(BAD_REQUEST, response.status_code)
 
-    @pytest.mark.xfail
-    def test_create_two_games_same_board_id(self, mock_db, mock_auth):
-        """Creating two games that both use the same board_id should error
-           Each board can only host 1 game at a time
-        """
+    def test_controller_id_not_exist(self, mock_db, mock_auth):
+        """If a controller doesn't exist, then it should error"""
         self.set_up_mock(mock_db, mock_auth)
         params = self.create_dummy_params()
+        params['board_id'] = 'invalid_board'
         response = self.post(params)
-        self.assertEqual(OK, response.status_code)
-        # create second game with same params (same board_id)
+        self.assertEqual(BAD_REQUEST, response.status_code)
+
+    def test_controller_offline(self, mock_db, mock_auth):
+        """If a controller hasn't polled since timeout, then it should error"""
+        self.set_up_mock(mock_db, mock_auth)
+        params = self.create_dummy_params()
+        params['board_id'] = 'offline'
         response = self.post(params)
         self.assertEqual(BAD_REQUEST, response.status_code)
 
@@ -108,6 +124,19 @@ class CreateGameTest(unittest.TestCase):
 
         # check history
         self.assertListEqual([], json_game["history"])
+
+    def test_controller_assigned(self, mock_db, mock_auth):
+        """The controller document should have the new game ID"""
+        self.set_up_mock(mock_db, mock_auth)
+        params = self.create_dummy_params()
+        response = self.post(params)
+        self.assertEqual(OK, response.status_code)
+
+        json_game = json.loads(response.data)
+        game_id = json_game['id']
+
+        controller_dict = mock_db.collection("controllers").document(params['board_id']).get().to_dict()
+        self.assertEqual(game_id, controller_dict['game_id'])
 
     def test_create_then_get_game(self, mock_db, mock_auth):
         """Creating a game then getting the same game_id should return
